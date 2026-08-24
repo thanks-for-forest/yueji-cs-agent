@@ -471,7 +471,8 @@
   ],
   "expected_intent": "aftersale",
   "must": [
-   "质量"
+   "凭证",
+   "破损"
   ],
   "grade": "auto"
  },
