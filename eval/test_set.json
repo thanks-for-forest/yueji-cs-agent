@@ -44,7 +44,8 @@
   ],
   "expected_intent": "product_consult",
   "must": [
-   "防晒"
+   "叠加",
+   "不建议"
   ],
   "grade": "auto"
  },
@@ -941,9 +942,8 @@
   ],
   "expected_intent": "product_consult",
   "must": [
-   "哪款",
-   "产品",
-   "肤质"
+   "肤质",
+   "产品"
   ],
   "grade": "auto"
  },
