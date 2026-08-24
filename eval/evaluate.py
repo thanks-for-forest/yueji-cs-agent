@@ -39,6 +39,7 @@ def load_json(path: Path) -> list[dict]:
 
 # ---------------- 用例执行 ----------------
 RUN_ID = datetime.now().strftime("%H%M%S")
+CASE_TIMEOUT = 60  # 单个用例（含全部轮次）超时秒数，防止单点卡死
 
 
 async def run_case(orch, case: dict) -> dict:
@@ -46,7 +47,19 @@ async def run_case(orch, case: dict) -> dict:
     last = None
     for msg in case["turns"]:
         t0 = time.monotonic()
-        last = await orch.handle(f"eval-{RUN_ID}-{case['id']}", msg)
+        try:
+            last = await asyncio.wait_for(
+                orch.handle(f"eval-{RUN_ID}-{case['id']}", msg), timeout=CASE_TIMEOUT
+            )
+        except asyncio.TimeoutError:
+            last = {
+                "reply": "[评测超时]",
+                "sources": [],
+                "intent": "timeout",
+                "action": "timeout",
+                "emotion": "normal",
+                "transferred": False,
+            }
         last["latency"] = time.monotonic() - t0
     return last
 
@@ -176,7 +189,10 @@ async def run_eval(quick: int | None = None) -> dict:
             "sources": len(result.get("sources", [])),
         }
         if case.get("grade") == "judge":
-            judge = await judge_case(case, result)
+            try:
+                judge = await asyncio.wait_for(judge_case(case, result), timeout=CASE_TIMEOUT)
+            except asyncio.TimeoutError:
+                judge = {"score": 0, "hallucination": True, "reason": "judge超时"}
             item["judge_score"] = judge["score"]
             item["hallucination"] = judge["hallucination"]
             item["judge_reason"] = judge["reason"]

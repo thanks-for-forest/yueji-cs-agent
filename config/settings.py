@@ -28,7 +28,7 @@ RERANK_MODEL: str = os.getenv("RERANK_MODEL", "qwen2.5:1.5b")  # LLM 重排（�
 # ---------- 检索参数 ----------
 RETRIEVE_DENSE_TOP_K: int = int(os.getenv("RETRIEVE_DENSE_TOP_K", "20"))
 RETRIEVE_BM25_TOP_K: int = int(os.getenv("RETRIEVE_BM25_TOP_K", "20"))
-RETRIEVE_FUSION_TOP_K: int = int(os.getenv("RETRIEVE_FUSION_TOP_K", "10"))
+RETRIEVE_FUSION_TOP_K: int = int(os.getenv("RETRIEVE_FUSION_TOP_K", "15"))
 RETRIEVE_RERANK_TOP_K: int = int(os.getenv("RETRIEVE_RERANK_TOP_K", "5"))
 RETRIEVE_RRF_K: int = int(os.getenv("RETRIEVE_RRF_K", "60"))
 # RRF 融合分阈值：最大约 2/61≈0.033（两个列表都排第一）。0.02≈"至少在单一列表排进前19"，
@@ -48,6 +48,10 @@ EMOTION_NEGATIVE_WORDS = [
     "差评", "垃圾", "骗", "骗子", "投诉", "曝光", "315", "失望", "气死",
     "退钱", "退款！", "再也不买", "拉黑", "垃圾产品", "欺诈", "坑人", "离谱",
     "恶心", "太过分", "投诉到底", "媒体", "律师", "起诉", "维权",
+    # 常见不满表达
+    "太慢", "很慢", "好慢", "烦", "烦躁", "生气", "不满", "假货", "刺痛",
+    "过敏", "不好用", "没用", "没效果", "质量差", "真差", "很差", "太坑",
+    "糟心", "无语", "等太久", "着急", "气人",
 ]
 EMOTION_STRONG_PUNCT = ["！！", "？？", "!!!", "？？？", "！！！"]
 EMOTION_TRANSFER_KW = ["投诉", "315", "曝光", "律师", "媒体", "起诉", "维权", "人工"]

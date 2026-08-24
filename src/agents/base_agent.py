@@ -59,6 +59,7 @@ class BaseAgent:
 
         llm = get_llm()
         resp = await llm.chat(messages, tools=self._tools or None)
+        tools_used: list[dict] = []
         for _ in range(settings.MAX_TOOL_ITERS):
             if not resp.has_tools:
                 break
@@ -77,6 +78,7 @@ class BaseAgent:
             }
             messages.append(assistant_msg)
             for i, tc in enumerate(resp.tool_calls):
+                tools_used.append({"name": tc.name, "arguments": tc.arguments})
                 result = await self.registry.execute(tc.name, tc.arguments)
                 tool_msg: dict = {"role": "tool", "content": result}
                 tool_msg["tool_call_id"] = tc.id or f"call_{i}"
@@ -86,6 +88,7 @@ class BaseAgent:
         return {
             "content": resp.content,
             "tool_calls": [{"name": t.name, "arguments": t.arguments} for t in resp.tool_calls],
+            "tools_used": tools_used,
             "provider": resp.provider,
         }
 

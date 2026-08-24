@@ -90,9 +90,10 @@ class OrderAgent(BaseAgent):
         out = await self._llm_loop(messages)
         reply = out["content"].strip()
 
-        # 4) 结构化输出（前端订单卡片）：尝试从工具结果还原
+        # 4) 结构化输出（前端订单卡片）：从工具执行记录还原
         extra: dict = {}
-        for tc in out["tool_calls"]:
+        tools_used = out.get("tools_used", [])
+        for tc in tools_used:
             if tc["name"] in ("query_order", "query_logistics"):
                 extra["tool_call"] = {"name": tc["name"], "arguments": tc["arguments"]}
 
@@ -100,7 +101,7 @@ class OrderAgent(BaseAgent):
             reply=reply,
             sources=parse_sources(reply),
             intent=intent,
-            action="order_queried" if out["tool_calls"] else "none",
+            action="order_queried" if tools_used else "none",
             extra=extra,
             meta_updates={"slots": slots},
         )
