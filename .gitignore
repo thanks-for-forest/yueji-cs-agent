@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 环境变量与密钥
+.env
+*.key
+
+# 数据与模型
+data/db/*.db
+data/processed/
+models/
+*.onnx
+
+# 评测产物
+eval/reports/
+
+# 工具
+.idea/
+.vscode/
+.DS_Store
+
+# Langfuse / 日志
+*.log

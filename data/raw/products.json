@@ -1,0 +1,1709 @@
+[
+  {
+    "name": "氨基酸温和洁面乳",
+    "category": "洁面",
+    "spec": "120g",
+    "price": 69,
+    "original_price": 89,
+    "ingredients": [
+      "月桂酰谷氨酸钠",
+      "氨基酸表活",
+      "甘油",
+      "泛醇"
+    ],
+    "efficacy": [
+      "温和清洁",
+      "保湿"
+    ],
+    "skin_types": [
+      "干性",
+      "敏感性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "敏感泛红"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "湿脸后取适量揉出泡沫，打圈按摩30秒后清水洗净",
+    "cautions": "避免入眼；皮肤破损处慎用",
+    "shelf_life": "36个月",
+    "stock": 1200,
+    "monthly_sales": 8900,
+    "rating": 4.8,
+    "tags": [
+      "氨基酸",
+      "温和",
+      "敏感肌"
+    ],
+    "product_id": "P001",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "净澈控油洁面啫喱",
+    "category": "洁面",
+    "spec": "150ml",
+    "price": 79,
+    "original_price": 99,
+    "ingredients": [
+      "椰油酰甘氨酸钾",
+      "薄荷醇",
+      "PCA锌",
+      "茶树提取物"
+    ],
+    "efficacy": [
+      "深层清洁",
+      "控油"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "出油",
+      "毛孔粗大"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量揉出泡沫，重点清洁T区，清水洗净",
+    "cautions": "敏感肌慎用，含薄荷成分",
+    "shelf_life": "36个月",
+    "stock": 800,
+    "monthly_sales": 7600,
+    "rating": 4.6,
+    "tags": [
+      "控油",
+      "油皮",
+      "清爽"
+    ],
+    "product_id": "P002",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "烟酰胺焕亮洁面膏",
+    "category": "洁面",
+    "spec": "100g",
+    "price": 89,
+    "original_price": 109,
+    "ingredients": [
+      "烟酰胺",
+      "甘油",
+      "月桂酰谷氨酸钠"
+    ],
+    "efficacy": [
+      "清洁",
+      "提亮肤色"
+    ],
+    "skin_types": [
+      "混合性",
+      "油性"
+    ],
+    "skin_issues": [
+      "暗沉",
+      "出油"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量揉出泡沫，轻柔按摩后洗净",
+    "cautions": "烟酰胺不耐受者建议先局部测试",
+    "shelf_life": "36个月",
+    "stock": 650,
+    "monthly_sales": 5300,
+    "rating": 4.5,
+    "tags": [
+      "烟酰胺",
+      "提亮"
+    ],
+    "product_id": "P003",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "水杨酸祛痘洁面乳",
+    "category": "洁面",
+    "spec": "120g",
+    "price": 95,
+    "original_price": 119,
+    "ingredients": [
+      "水杨酸(0.5%)",
+      "洋甘菊提取物",
+      "氨基酸表活"
+    ],
+    "efficacy": [
+      "清洁",
+      "祛痘",
+      "疏通毛孔"
+    ],
+    "skin_types": [
+      "油性"
+    ],
+    "skin_issues": [
+      "痘痘",
+      "黑头"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量打圈按摩1分钟，避开眼周，清水洗净，建议晚间使用",
+    "cautions": "含水杨酸，敏感肌慎用；使用后注意防晒",
+    "shelf_life": "24个月",
+    "stock": 500,
+    "monthly_sales": 6100,
+    "rating": 4.4,
+    "tags": [
+      "祛痘",
+      "水杨酸",
+      "油皮"
+    ],
+    "product_id": "P004",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "积雪草舒缓洁面泡沫",
+    "category": "洁面",
+    "spec": "200ml",
+    "price": 99,
+    "original_price": 129,
+    "ingredients": [
+      "积雪草提取物",
+      "氨基酸表活",
+      "泛醇",
+      "尿囊素"
+    ],
+    "efficacy": [
+      "温和清洁",
+      "舒缓修护"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "按压2泵泡沫直接上脸，轻柔按摩后清水洗净",
+    "cautions": "极干性皮肤使用后及时补水",
+    "shelf_life": "24个月",
+    "stock": 900,
+    "monthly_sales": 7200,
+    "rating": 4.7,
+    "tags": [
+      "积雪草",
+      "舒缓",
+      "敏感肌",
+      "泡沫"
+    ],
+    "product_id": "P005",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "玻尿酸保湿洁面乳",
+    "category": "洁面",
+    "spec": "120g",
+    "price": 75,
+    "original_price": 95,
+    "ingredients": [
+      "透明质酸钠",
+      "甘油",
+      "神经酰胺NP"
+    ],
+    "efficacy": [
+      "温和清洁",
+      "补水保湿"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "湿脸后取适量揉出泡沫按摩洗净",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 1100,
+    "monthly_sales": 6400,
+    "rating": 4.6,
+    "tags": [
+      "玻尿酸",
+      "保湿",
+      "干皮"
+    ],
+    "product_id": "P006",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "茶多酚净化洁面泥",
+    "category": "洁面",
+    "spec": "100g",
+    "price": 85,
+    "original_price": 105,
+    "ingredients": [
+      "高岭土",
+      "茶多酚",
+      "芦荟提取物"
+    ],
+    "efficacy": [
+      "深层清洁",
+      "吸附油脂",
+      "收敛毛孔"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "黑头",
+      "毛孔粗大",
+      "出油"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量涂抹全脸（避开眼唇），停留2分钟洗去，每周2-3次",
+    "cautions": "泥状面膜类产品，不宜每日使用",
+    "shelf_life": "24个月",
+    "stock": 430,
+    "monthly_sales": 4800,
+    "rating": 4.3,
+    "tags": [
+      "清洁泥膜",
+      "黑头",
+      "毛孔"
+    ],
+    "product_id": "P007",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "温和卸妆洁面二合一",
+    "category": "洁面",
+    "spec": "150ml",
+    "price": 109,
+    "original_price": 139,
+    "ingredients": [
+      "癸基葡糖苷",
+      "椰油酰谷氨酸二钠",
+      "维生素E"
+    ],
+    "efficacy": [
+      "卸妆",
+      "清洁",
+      "保湿"
+    ],
+    "skin_types": [
+      "干性",
+      "中性",
+      "敏感性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "敏感泛红"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "干手干脸取适量涂抹按摩，加水乳化后清水洗净（浓妆建议先用卸妆油）",
+    "cautions": "防水型彩妆建议配合专用卸妆产品",
+    "shelf_life": "36个月",
+    "stock": 760,
+    "monthly_sales": 5800,
+    "rating": 4.5,
+    "tags": [
+      "卸妆",
+      "二合一",
+      "温和"
+    ],
+    "product_id": "P008",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "美白透亮洁面乳",
+    "category": "洁面",
+    "spec": "120g",
+    "price": 92,
+    "original_price": 115,
+    "ingredients": [
+      "烟酰胺",
+      "光果甘草提取物",
+      "甘油"
+    ],
+    "efficacy": [
+      "清洁",
+      "提亮肤色",
+      "淡化暗沉"
+    ],
+    "skin_types": [
+      "混合性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量揉出泡沫，按摩1分钟后洗净",
+    "cautions": "含烟酰胺，先做耐受测试",
+    "shelf_life": "36个月",
+    "stock": 540,
+    "monthly_sales": 4300,
+    "rating": 4.4,
+    "tags": [
+      "美白",
+      "烟酰胺",
+      "提亮"
+    ],
+    "product_id": "P009",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "男士控油清爽洁面",
+    "category": "洁面",
+    "spec": "150ml",
+    "price": 65,
+    "original_price": 85,
+    "ingredients": [
+      "薄荷醇",
+      "PCA锌",
+      "活性炭"
+    ],
+    "efficacy": [
+      "深层清洁",
+      "控油",
+      "去角质"
+    ],
+    "skin_types": [
+      "油性"
+    ],
+    "skin_issues": [
+      "出油",
+      "黑头"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "湿脸后取适量揉出泡沫，重点清洁T区后洗净",
+    "cautions": "含薄荷，敏感肌慎用",
+    "shelf_life": "36个月",
+    "stock": 980,
+    "monthly_sales": 8100,
+    "rating": 4.5,
+    "tags": [
+      "男士",
+      "控油",
+      "清爽"
+    ],
+    "product_id": "P010",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "烟酰胺焕亮精华液",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 129,
+    "original_price": 159,
+    "ingredients": [
+      "烟酰胺(5%)",
+      "泛醇",
+      "透明质酸钠"
+    ],
+    "efficacy": [
+      "提亮肤色",
+      "淡化痘印",
+      "改善暗沉"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "暗沉",
+      "痘印"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "早晚洁面爽肤后取3-4滴，均匀涂抹并轻拍至吸收",
+    "cautions": "烟酰胺不耐受者先局部测试；白天使用需防晒",
+    "shelf_life": "36个月",
+    "stock": 1560,
+    "monthly_sales": 12800,
+    "rating": 4.8,
+    "tags": [
+      "烟酰胺",
+      "美白",
+      "平价"
+    ],
+    "product_id": "P011",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "玻尿酸保湿精华液",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 119,
+    "original_price": 149,
+    "ingredients": [
+      "多重玻尿酸",
+      "泛醇",
+      "甘油"
+    ],
+    "efficacy": [
+      "深层补水",
+      "锁水保湿"
+    ],
+    "skin_types": [
+      "干性",
+      "中性",
+      "敏感性"
+    ],
+    "skin_issues": [
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "爽肤后取2-3滴涂抹全脸，可叠加面霜锁水",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 1700,
+    "monthly_sales": 10200,
+    "rating": 4.7,
+    "tags": [
+      "玻尿酸",
+      "补水",
+      "干皮"
+    ],
+    "product_id": "P012",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "视黄醇抗皱精华",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 189,
+    "original_price": 239,
+    "ingredients": [
+      "视黄醇(0.3%)",
+      "角鲨烷",
+      "神经酰胺NP"
+    ],
+    "efficacy": [
+      "抗皱",
+      "紧致",
+      "平滑细纹"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "细纹"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "仅夜间使用，洁面后取2-3滴，避光保存；初期隔天使用建立耐受",
+    "cautions": "孕妇禁用；白天必须防晒；初期可能脱皮属正常",
+    "shelf_life": "24个月",
+    "stock": 420,
+    "monthly_sales": 3900,
+    "rating": 4.5,
+    "tags": [
+      "视黄醇",
+      "抗老",
+      "A醇"
+    ],
+    "product_id": "P013",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "积雪草修护精华液",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 139,
+    "original_price": 169,
+    "ingredients": [
+      "积雪草提取物",
+      "泛醇",
+      "甘草酸二钾"
+    ],
+    "efficacy": [
+      "舒缓修护",
+      "褪红",
+      "强韧屏障"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后取2-3滴轻拍全脸，泛红处可叠加",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 880,
+    "monthly_sales": 6900,
+    "rating": 4.8,
+    "tags": [
+      "积雪草",
+      "修护",
+      "敏感肌",
+      "褪红"
+    ],
+    "product_id": "P014",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "水杨酸净痘精华",
+    "category": "精华",
+    "spec": "20ml",
+    "price": 99,
+    "original_price": 129,
+    "ingredients": [
+      "水杨酸(2%)",
+      "烟酰胺",
+      "金缕梅提取物"
+    ],
+    "efficacy": [
+      "祛痘",
+      "疏通毛孔",
+      "控油"
+    ],
+    "skin_types": [
+      "油性"
+    ],
+    "skin_issues": [
+      "痘痘",
+      "黑头"
+    ],
+    "age_groups": [
+      "18-25"
+    ],
+    "usage": "点涂于痘痘处，早晚各一次；全脸使用每周2-3次",
+    "cautions": "含水杨酸，敏感肌慎用；避免与A醇同用；注意防晒",
+    "shelf_life": "24个月",
+    "stock": 930,
+    "monthly_sales": 8800,
+    "rating": 4.4,
+    "tags": [
+      "祛痘",
+      "水杨酸",
+      "油皮"
+    ],
+    "product_id": "P015",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "维生素C焕肤精华",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 159,
+    "original_price": 199,
+    "ingredients": [
+      "抗坏血酸(10%)",
+      "维生素E",
+      "阿魏酸"
+    ],
+    "efficacy": [
+      "提亮肤色",
+      "抗氧化",
+      "淡化色斑"
+    ],
+    "skin_types": [
+      "干性",
+      "中性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "晨间洁面后取3滴涂抹，后续必须防晒；开封后2个月内用完",
+    "cautions": "高浓度VC初次使用可能有刺痛；避光保存",
+    "shelf_life": "24个月",
+    "stock": 610,
+    "monthly_sales": 5200,
+    "rating": 4.6,
+    "tags": [
+      "维C",
+      "抗氧化",
+      "提亮"
+    ],
+    "product_id": "P016",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "二裂酵母修护精华",
+    "category": "精华",
+    "spec": "50ml",
+    "price": 219,
+    "original_price": 269,
+    "ingredients": [
+      "二裂酵母发酵产物滤液",
+      "泛醇",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "修护屏障",
+      "维稳",
+      "抗初老"
+    ],
+    "skin_types": [
+      "干性",
+      "混合性",
+      "敏感性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "敏感泛红"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "早晚洁面后取2-3滴涂抹全脸",
+    "cautions": "无",
+    "shelf_life": "24个月",
+    "stock": 720,
+    "monthly_sales": 6100,
+    "rating": 4.7,
+    "tags": [
+      "二裂酵母",
+      "维稳",
+      "修护"
+    ],
+    "product_id": "P017",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "神经酰胺屏障精华",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 149,
+    "original_price": 179,
+    "ingredients": [
+      "神经酰胺NP",
+      "神经酰胺AP",
+      "角鲨烷"
+    ],
+    "efficacy": [
+      "修护屏障",
+      "保湿",
+      "舒缓"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后取2-3滴涂抹，可与其他精华叠加",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 840,
+    "monthly_sales": 5900,
+    "rating": 4.6,
+    "tags": [
+      "神经酰胺",
+      "屏障修护",
+      "敏感肌"
+    ],
+    "product_id": "P018",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "虾青素抗氧化精华",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 169,
+    "original_price": 209,
+    "ingredients": [
+      "虾青素",
+      "烟酰胺",
+      "维生素E"
+    ],
+    "efficacy": [
+      "抗氧化",
+      "提亮",
+      "抗初老"
+    ],
+    "skin_types": [
+      "混合性",
+      "油性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "早晚洁面后取3滴涂抹全脸",
+    "cautions": "含虾青素呈淡橙色属正常；白天配合防晒",
+    "shelf_life": "24个月",
+    "stock": 380,
+    "monthly_sales": 3400,
+    "rating": 4.5,
+    "tags": [
+      "虾青素",
+      "抗氧化"
+    ],
+    "product_id": "P019",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "多肽紧致精华液",
+    "category": "精华",
+    "spec": "30ml",
+    "price": 199,
+    "original_price": 249,
+    "ingredients": [
+      "棕榈酰五肽-4",
+      "乙酰基六肽-8",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "紧致",
+      "淡化细纹",
+      "提升轮廓"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "细纹"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "早晚洁面后取2-3滴，由下往上提拉涂抹",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 460,
+    "monthly_sales": 4100,
+    "rating": 4.6,
+    "tags": [
+      "多肽",
+      "紧致",
+      "抗老"
+    ],
+    "product_id": "P020",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "玻尿酸水润水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 169,
+    "original_price": 219,
+    "ingredients": [
+      "多重玻尿酸",
+      "甘油",
+      "神经酰胺NP"
+    ],
+    "efficacy": [
+      "补水",
+      "保湿",
+      "锁水"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后先拍水再涂乳，早晚使用",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 1350,
+    "monthly_sales": 9800,
+    "rating": 4.7,
+    "tags": [
+      "水乳套装",
+      "玻尿酸",
+      "干皮"
+    ],
+    "product_id": "P021",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "控油平衡水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 159,
+    "original_price": 199,
+    "ingredients": [
+      "PCA锌",
+      "金缕梅提取物",
+      "烟酰胺"
+    ],
+    "efficacy": [
+      "控油",
+      "平衡水油",
+      "收敛毛孔"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "出油",
+      "毛孔粗大"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "洁面后先拍水再涂乳，T区可多拍一遍水",
+    "cautions": "含烟酰胺，先做耐受测试",
+    "shelf_life": "36个月",
+    "stock": 990,
+    "monthly_sales": 8700,
+    "rating": 4.5,
+    "tags": [
+      "控油",
+      "油皮",
+      "水乳"
+    ],
+    "product_id": "P022",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "敏感肌舒缓水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 179,
+    "original_price": 229,
+    "ingredients": [
+      "积雪草提取物",
+      "泛醇",
+      "甘草酸二钾"
+    ],
+    "efficacy": [
+      "舒缓",
+      "褪红",
+      "修护"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后拍水涂乳，避开破损皮肤",
+    "cautions": "精简护肤，减少叠加",
+    "shelf_life": "36个月",
+    "stock": 860,
+    "monthly_sales": 7600,
+    "rating": 4.8,
+    "tags": [
+      "敏感肌",
+      "舒缓",
+      "水乳"
+    ],
+    "product_id": "P023",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "烟酰胺亮肤水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 189,
+    "original_price": 239,
+    "ingredients": [
+      "烟酰胺(水3%/乳4%)",
+      "光果甘草提取物",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "提亮肤色",
+      "改善暗沉",
+      "保湿"
+    ],
+    "skin_types": [
+      "混合性",
+      "油性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "洁面后先拍水再涂乳，早晚使用",
+    "cautions": "烟酰胺不耐受者先局部测试；白天注意防晒",
+    "shelf_life": "36个月",
+    "stock": 780,
+    "monthly_sales": 7100,
+    "rating": 4.6,
+    "tags": [
+      "烟酰胺",
+      "提亮",
+      "水乳"
+    ],
+    "product_id": "P024",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "积雪草修护水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 175,
+    "original_price": 215,
+    "ingredients": [
+      "积雪草提取物",
+      "神经酰胺NP",
+      "角鲨烷"
+    ],
+    "efficacy": [
+      "修护屏障",
+      "舒缓",
+      "保湿"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后拍水涂乳，可厚涂乳液做局部修护",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 640,
+    "monthly_sales": 5600,
+    "rating": 4.7,
+    "tags": [
+      "积雪草",
+      "修护",
+      "水乳"
+    ],
+    "product_id": "P025",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "神经酰胺屏障水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 185,
+    "original_price": 225,
+    "ingredients": [
+      "神经酰胺NP",
+      "神经酰胺AP",
+      "胆甾醇"
+    ],
+    "efficacy": [
+      "屏障修护",
+      "保湿",
+      "维稳"
+    ],
+    "skin_types": [
+      "干性",
+      "敏感性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "敏感泛红"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后拍水涂乳，早晚使用",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 520,
+    "monthly_sales": 4700,
+    "rating": 4.6,
+    "tags": [
+      "神经酰胺",
+      "屏障",
+      "水乳"
+    ],
+    "product_id": "P026",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "玫瑰精粹保湿水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 199,
+    "original_price": 249,
+    "ingredients": [
+      "玫瑰提取物",
+      "玻尿酸",
+      "甘油"
+    ],
+    "efficacy": [
+      "补水",
+      "提亮",
+      "香氛体验"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "洁面后拍水涂乳，早晚使用",
+    "cautions": "含香精，极敏感肌慎用",
+    "shelf_life": "36个月",
+    "stock": 450,
+    "monthly_sales": 3900,
+    "rating": 4.5,
+    "tags": [
+      "玫瑰",
+      "保湿",
+      "香氛"
+    ],
+    "product_id": "P027",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "茶树祛痘水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 165,
+    "original_price": 205,
+    "ingredients": [
+      "茶树提取物",
+      "水杨酸",
+      "烟酰胺"
+    ],
+    "efficacy": [
+      "祛痘",
+      "控油",
+      "舒缓"
+    ],
+    "skin_types": [
+      "油性"
+    ],
+    "skin_issues": [
+      "痘痘",
+      "出油"
+    ],
+    "age_groups": [
+      "18-25"
+    ],
+    "usage": "洁面后拍水涂乳，痘痘处可湿敷爽肤水",
+    "cautions": "含水杨酸，敏感肌慎用；注意防晒",
+    "shelf_life": "24个月",
+    "stock": 590,
+    "monthly_sales": 5400,
+    "rating": 4.4,
+    "tags": [
+      "茶树",
+      "祛痘",
+      "水乳"
+    ],
+    "product_id": "P028",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "男士控油水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 149,
+    "original_price": 189,
+    "ingredients": [
+      "PCA锌",
+      "薄荷醇",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "控油",
+      "保湿",
+      "清爽"
+    ],
+    "skin_types": [
+      "油性"
+    ],
+    "skin_issues": [
+      "出油"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "洁面后拍水涂乳，早晚使用",
+    "cautions": "含薄荷，敏感肌慎用",
+    "shelf_life": "36个月",
+    "stock": 1050,
+    "monthly_sales": 8200,
+    "rating": 4.5,
+    "tags": [
+      "男士",
+      "控油",
+      "水乳"
+    ],
+    "product_id": "P029",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "胶原蛋白弹润水乳套装",
+    "category": "水乳",
+    "spec": "水150ml+乳120ml",
+    "price": 209,
+    "original_price": 259,
+    "ingredients": [
+      "水解胶原",
+      "多肽",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "弹润",
+      "紧致",
+      "保湿"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "细纹",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "洁面后拍水涂乳，配合提拉手法",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 410,
+    "monthly_sales": 3600,
+    "rating": 4.6,
+    "tags": [
+      "胶原蛋白",
+      "弹润",
+      "抗老"
+    ],
+    "product_id": "P030",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "玻尿酸保湿面霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 109,
+    "original_price": 139,
+    "ingredients": [
+      "多重玻尿酸",
+      "角鲨烷",
+      "甘油"
+    ],
+    "efficacy": [
+      "深度保湿",
+      "锁水"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "精华后取黄豆大小涂全脸，按摩至吸收，早晚使用",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 1250,
+    "monthly_sales": 9300,
+    "rating": 4.7,
+    "tags": [
+      "玻尿酸",
+      "保湿",
+      "干皮"
+    ],
+    "product_id": "P031",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "控油清爽凝霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 99,
+    "original_price": 129,
+    "ingredients": [
+      "金缕梅提取物",
+      "PCA锌",
+      "透明质酸钠"
+    ],
+    "efficacy": [
+      "控油",
+      "清爽保湿"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "出油"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "精华后取适量涂全脸，凝霜质地吸收快",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 890,
+    "monthly_sales": 7800,
+    "rating": 4.5,
+    "tags": [
+      "控油",
+      "凝霜",
+      "油皮"
+    ],
+    "product_id": "P032",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "敏感肌修护霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 129,
+    "original_price": 159,
+    "ingredients": [
+      "积雪草提取物",
+      "神经酰胺NP",
+      "角鲨烷",
+      "尿囊素"
+    ],
+    "efficacy": [
+      "修护屏障",
+      "舒缓",
+      "褪红"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "敏感泛红",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "精华后取适量厚涂于泛红干燥处，轻柔按摩吸收",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 760,
+    "monthly_sales": 6500,
+    "rating": 4.8,
+    "tags": [
+      "敏感肌",
+      "修护",
+      "舒缓"
+    ],
+    "product_id": "P033",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "烟酰胺亮肤面霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 119,
+    "original_price": 149,
+    "ingredients": [
+      "烟酰胺(4%)",
+      "光果甘草提取物",
+      "玻尿酸"
+    ],
+    "efficacy": [
+      "提亮肤色",
+      "改善暗沉",
+      "保湿"
+    ],
+    "skin_types": [
+      "混合性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "精华后取适量涂全脸，早晚使用",
+    "cautions": "烟酰胺不耐受者先局部测试；白天防晒",
+    "shelf_life": "36个月",
+    "stock": 680,
+    "monthly_sales": 5900,
+    "rating": 4.5,
+    "tags": [
+      "烟酰胺",
+      "提亮",
+      "面霜"
+    ],
+    "product_id": "P034",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "视黄醇抗皱晚霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 169,
+    "original_price": 209,
+    "ingredients": [
+      "视黄醇(0.2%)",
+      "神经酰胺NP",
+      "角鲨烷"
+    ],
+    "efficacy": [
+      "抗皱",
+      "紧致",
+      "夜间修护"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "细纹"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "仅夜间使用，精华后取适量涂全脸，避光保存",
+    "cautions": "孕妇禁用；初期隔天使用建立耐受；白天严格防晒",
+    "shelf_life": "24个月",
+    "stock": 470,
+    "monthly_sales": 4400,
+    "rating": 4.5,
+    "tags": [
+      "视黄醇",
+      "抗老",
+      "晚霜"
+    ],
+    "product_id": "P035",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "神经酰胺修护霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 115,
+    "original_price": 145,
+    "ingredients": [
+      "神经酰胺NP",
+      "神经酰胺AP",
+      "胆甾醇",
+      "角鲨烷"
+    ],
+    "efficacy": [
+      "屏障修护",
+      "保湿",
+      "维稳"
+    ],
+    "skin_types": [
+      "敏感性",
+      "干性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "敏感泛红"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35",
+      "36+"
+    ],
+    "usage": "精华后取适量涂全脸，早晚使用",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 820,
+    "monthly_sales": 6100,
+    "rating": 4.7,
+    "tags": [
+      "神经酰胺",
+      "屏障",
+      "修护"
+    ],
+    "product_id": "P036",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "清爽保湿啫喱霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 95,
+    "original_price": 125,
+    "ingredients": [
+      "玻尿酸",
+      "芦荟提取物",
+      "甘油"
+    ],
+    "efficacy": [
+      "补水",
+      "清爽保湿"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "出油",
+      "干燥起皮"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "精华后取适量涂全脸，啫喱质地适合夏季",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 700,
+    "monthly_sales": 5400,
+    "rating": 4.4,
+    "tags": [
+      "啫喱",
+      "清爽",
+      "保湿"
+    ],
+    "product_id": "P037",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "多肽紧致面霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 189,
+    "original_price": 239,
+    "ingredients": [
+      "棕榈酰五肽-4",
+      "乙酰基六肽-8",
+      "角鲨烷"
+    ],
+    "efficacy": [
+      "紧致",
+      "淡化细纹",
+      "提升轮廓"
+    ],
+    "skin_types": [
+      "干性",
+      "中性"
+    ],
+    "skin_issues": [
+      "细纹"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "精华后取适量由下往上提拉涂抹",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 390,
+    "monthly_sales": 3300,
+    "rating": 4.6,
+    "tags": [
+      "多肽",
+      "紧致",
+      "抗老"
+    ],
+    "product_id": "P038",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "美白淡斑霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 179,
+    "original_price": 229,
+    "ingredients": [
+      "烟酰胺",
+      "光果甘草提取物",
+      "维生素C衍生物"
+    ],
+    "efficacy": [
+      "美白",
+      "淡化色斑",
+      "提亮"
+    ],
+    "skin_types": [
+      "混合性",
+      "干性"
+    ],
+    "skin_issues": [
+      "暗沉"
+    ],
+    "age_groups": [
+      "26-35",
+      "36+"
+    ],
+    "usage": "精华后取适量涂抹于色斑处并全脸使用，早晚各一次",
+    "cautions": "含烟酰胺与VC衍生物，先做耐受测试；白天防晒",
+    "shelf_life": "36个月",
+    "stock": 440,
+    "monthly_sales": 4100,
+    "rating": 4.5,
+    "tags": [
+      "美白",
+      "淡斑",
+      "烟酰胺"
+    ],
+    "product_id": "P039",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  },
+  {
+    "name": "男士保湿面霜",
+    "category": "面霜",
+    "spec": "50g",
+    "price": 89,
+    "original_price": 119,
+    "ingredients": [
+      "玻尿酸",
+      "甘油",
+      "维生素E"
+    ],
+    "efficacy": [
+      "保湿",
+      "锁水"
+    ],
+    "skin_types": [
+      "油性",
+      "混合性"
+    ],
+    "skin_issues": [
+      "干燥起皮",
+      "出油"
+    ],
+    "age_groups": [
+      "18-25",
+      "26-35"
+    ],
+    "usage": "洁面后取适量涂全脸，早晚使用",
+    "cautions": "无",
+    "shelf_life": "36个月",
+    "stock": 900,
+    "monthly_sales": 7100,
+    "rating": 4.4,
+    "tags": [
+      "男士",
+      "保湿",
+      "面霜"
+    ],
+    "product_id": "P040",
+    "brand": "悦己 YUEJI",
+    "faq_ids": []
+  }
+]
