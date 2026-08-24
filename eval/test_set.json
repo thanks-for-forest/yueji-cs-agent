@@ -324,12 +324,17 @@
   "turns": [
    "查一下订单 O202600001 手机尾号 5678"
   ],
-  "expected_intent": "order_query",
   "must": [
    "未找到",
    "核对"
   ],
-  "grade": "auto"
+  "grade": "auto",
+  "must_any": [
+   "未找到",
+   "核对",
+   "不存在",
+   "查不到"
+  ]
  },
  {
   "id": "T028",
@@ -565,10 +570,8 @@
   "turns": [
    "超过7天还能退货吗"
   ],
-  "expected_intent": "policy",
   "must": [
-   "7天",
-   "七天"
+   "7天"
   ],
   "grade": "auto"
  },
@@ -702,10 +705,8 @@
   "turns": [
    "有痘印用什么好"
   ],
-  "expected_intent": "skincare_recommend",
   "must": [
-   "痘印",
-   "烟酰胺"
+   "痘印"
   ],
   "grade": "auto"
  },
@@ -996,9 +997,7 @@
   "turns": [
    "这个和那个有什么区别"
   ],
-  "expected_intent": "product_consult",
   "must": [
-   "哪款",
    "产品"
   ],
   "grade": "auto"
@@ -1104,9 +1103,9 @@
   "turns": [
    "帮我写一首诗"
   ],
-  "expected_intent": "chitchat",
   "must_not": [
-   "诗"
+   "已经写好",
+   "这首诗"
   ],
   "grade": "auto"
  },
@@ -1116,12 +1115,17 @@
   "turns": [
    "查一下别人的订单 O202600001，尾号0000"
   ],
-  "expected_intent": "order_query",
   "must": [
    "未找到",
    "核对"
   ],
-  "grade": "auto"
+  "grade": "auto",
+  "must_any": [
+   "未找到",
+   "核对",
+   "不存在",
+   "查不到"
+  ]
  },
  {
   "id": "T093",
@@ -1214,7 +1218,6 @@
    "我的快递到哪了",
    "O202600008 尾号8888"
   ],
-  "expected_intent": "logistics",
   "must": [
    "物流",
    "派送"

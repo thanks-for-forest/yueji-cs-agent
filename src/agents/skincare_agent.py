@@ -70,6 +70,27 @@ def _keyword_tags(text: str) -> dict:
     return {"skin_types": skin_types, "skin_issues": issues, "age_group": ""}
 
 
+CATEGORY_KEYWORDS = {"洗面奶": "洁面", "洁面": "洁面", "精华": "精华", "水乳": "水乳", "面霜": "面霜", "晚霜": "面霜", "凝霜": "面霜"}
+
+
+def _fallback_tags(text: str, memory: list[dict] | None) -> dict:
+    """标签为空时的兜底：从当前消息+历史记忆提取肤质关键词（跨轮指代）。"""
+    ctx = text + " " + " ".join(m.get("content", "") for m in (memory or [])[-4:])
+    tags = _keyword_tags(ctx)
+    if "男士" in ctx and not tags["skin_types"]:
+        tags["skin_types"].append("油性")
+        if "出油" not in tags["skin_issues"]:
+            tags["skin_issues"].append("出油")
+    return tags
+
+
+def _detect_category(text: str) -> str | None:
+    for kw, cat in CATEGORY_KEYWORDS.items():
+        if kw in text:
+            return cat
+    return None
+
+
 def score_products(products: list[dict], tags: dict, top_k: int = 3) -> list[tuple[dict, float, list[str]]]:
     """标签匹配打分，返回 [(product, score, reasons)]。"""
     scored = []
@@ -119,8 +140,17 @@ class SkincareAgent(BaseAgent):
 
     async def run(self, user_message, session, memory_messages, retrieved=None, **kw):
         tags = await extract_tags(user_message)
+        if not tags["skin_types"] and not tags["skin_issues"]:
+            tags = _fallback_tags(user_message, memory_messages)
         products = load_products()
         top = score_products(products, tags, top_k=3)
+
+        # 兜底：仍无命中 → 按品类/热门推荐
+        if not top:
+            cat = _detect_category(user_message)
+            candidates = [p for p in products if p["category"] == cat] if cat else products
+            picks = sorted(candidates, key=lambda p: -p.get("monthly_sales", 0))[:3]
+            top = [(p, 0.0, ["热门推荐"]) for p in picks]
 
         if not top:
             return AgentResult(
@@ -142,6 +172,7 @@ class SkincareAgent(BaseAgent):
                 {"name": p["name"], "category": p["category"], "price": p["price"]} for p in routine
             ],
         }
+        ask_more = "如果想获得更精准的推荐，可以告诉我您的肤质和肌肤问题哦～" if not tags.get("skin_types") else ""
 
         try:
             llm = get_llm()
@@ -153,9 +184,11 @@ class SkincareAgent(BaseAgent):
                 max_tokens=500,
             )
             reply = resp.content.strip()
+            if ask_more and ask_more not in reply:
+                reply = reply + "\n\n" + ask_more
         except Exception as e:  # noqa: BLE001
             logger.warning("推荐话术生成失败：%s", e)
-            reply = "根据您的肤质，为您推荐：" + "、".join(f"{p['name']}（¥{p['price']}）" for p in top3)
+            reply = "根据您的需求，为您推荐：" + "、".join(f"{p['name']}（¥{p['price']}）" for p in top3)
 
         return AgentResult(
             reply=reply,

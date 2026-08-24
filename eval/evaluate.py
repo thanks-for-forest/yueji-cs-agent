@@ -78,6 +78,9 @@ def check_case(case: dict, result: dict) -> tuple[bool, list[str]]:
     for s in case.get("must", []):
         if s not in reply:
             fails.append(f"缺少关键词: {s}")
+    if case.get("must_any"):
+        if not any(s in reply for s in case["must_any"]):
+            fails.append(f"应包含其一: {case['must_any']}")
     for s in case.get("must_not", []):
         if s in reply:
             fails.append(f"不应出现: {s}")
@@ -187,6 +190,7 @@ async def run_eval(quick: int | None = None) -> dict:
             "transferred": result.get("transferred"),
             "latency": round(result.get("latency", 0), 2),
             "sources": len(result.get("sources", [])),
+            "reply_preview": result.get("reply", "")[:180],
         }
         if case.get("grade") == "judge":
             try:
