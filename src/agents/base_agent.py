@@ -63,7 +63,7 @@ class BaseAgent:
         for _ in range(settings.MAX_TOOL_ITERS):
             if not resp.has_tools:
                 break
-            # OpenAI 协议要求：tool 角色消息必须跟在含 tool_calls 的 assistant 消息之后
+            # OpenAI 协议：tool 消息必须跟在含 tool_calls 的 assistant 消息之后
             assistant_msg: dict = {
                 "role": "assistant",
                 "content": resp.content or None,
@@ -80,9 +80,7 @@ class BaseAgent:
             for i, tc in enumerate(resp.tool_calls):
                 tools_used.append({"name": tc.name, "arguments": tc.arguments})
                 result = await self.registry.execute(tc.name, tc.arguments)
-                tool_msg: dict = {"role": "tool", "content": result}
-                tool_msg["tool_call_id"] = tc.id or f"call_{i}"
-                messages.append(tool_msg)
+                messages.append({"role": "tool", "content": result, "tool_call_id": tc.id or f"call_{i}"})
                 logger.info("Agent[%s] 调用工具 %s(%s)", self.name, tc.name, tc.arguments)
             resp = await llm.chat(messages, tools=self._tools or None)
         return {
@@ -91,6 +89,26 @@ class BaseAgent:
             "tools_used": tools_used,
             "provider": resp.provider,
         }
+
+    async def _llm_loop_stream(self, messages: list[dict]) -> AsyncIterator[str]:
+        """流式最终回答（SSE）。
+
+        设计：流式路径不预检工具调用（省一次非流式调用，保证 TTFT）。
+        商品/政策/闲聊场景的 <知识片段> 上下文已足够支撑回答；
+        订单/售后/推荐等强工具流程走非流式路径（编排器按意图分流）。
+        """
+        from src.llm.client import get_llm as _get_llm
+
+        llm = _get_llm()
+        got = False
+        async for delta in llm.chat_stream(messages):
+            got = True
+            yield delta
+        # 极端情况：流式无输出（如模型返回空）→ 非流式兜底
+        if not got:
+            resp = await llm.chat(messages, tools=self._tools or None)
+            if resp.content:
+                yield resp.content
 
     # ---------- 检索上下文注入 ----------
     @staticmethod

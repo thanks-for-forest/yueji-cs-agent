@@ -31,9 +31,17 @@ def test_rule_route(text, expected):
 
 def test_ambiguous_intent_via_llm():
     """无强规则信号时由 LLM 兜底，意图仍应正确。"""
-    intent, conf, method = _route("烟酰胺精华适合敏感肌吗")
+    intent, conf, method = _route("烟酰胺精华敏感肌能用吗，有推荐吗")
+    assert intent in ("product_consult", "skincare_recommend")
+    intent2, conf2, method2 = _route("烟酰胺焕亮精华液有什么副作用")
+    assert intent2 == "product_consult"
+
+
+def test_product_name_routes_to_consult():
+    """具体产品名 → 商品咨询（点名问询）。"""
+    intent, _, method = _route("氨基酸温和洁面乳适合什么肤质")
     assert intent == "product_consult"
-    assert method == "llm"
+    assert method == "rule"
 
 
 def test_llm_fallback_for_ambiguous():

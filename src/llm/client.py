@@ -224,13 +224,13 @@ class LLMClient:
     # ---------------- Embedding（Ollama bge-m3，批量） ----------------
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
-        """批量向量化。空输入返回空列表。"""
+        """批量向量化。空输入返回空列表。keep_alive 让模型驻留内存，避免频繁冷加载。"""
         if not texts:
             return []
         client = self._client_for_loop()
         resp = await client.post(
             f"{settings.OLLAMA_BASE_URL}/api/embed",
-            json={"model": settings.EMBED_MODEL, "input": texts},
+            json={"model": settings.EMBED_MODEL, "input": texts, "keep_alive": "10m"},
         )
         resp.raise_for_status()
         return resp.json()["embeddings"]

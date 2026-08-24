@@ -31,8 +31,7 @@ class ProductAgent(BaseAgent):
     system_prompt = SYSTEM_PROMPT_PRODUCT
     tool_names = ["search_product", "get_product"]
 
-    async def run(self, user_message, session, memory_messages, retrieved=None, **kw):
-        intent = kw.get("intent", "product_consult")
+    def _build_messages(self, user_message, memory_messages, retrieved):
         context = self.format_context(retrieved or [])
         messages: list[dict] = [
             {"role": "system", "content": self.system_prompt},
@@ -41,6 +40,17 @@ class ProductAgent(BaseAgent):
         if context:
             messages.append({"role": "system", "content": f"<知识片段>\n{context}\n</知识片段>"})
         messages.append({"role": "user", "content": user_message})
+        return messages
+
+    async def stream(self, user_message, session, memory_messages, retrieved=None, **kw):
+        """流式版本：返回文本增量迭代器（用于 SSE）。"""
+        messages = self._build_messages(user_message, memory_messages, retrieved)
+        async for delta in self._llm_loop_stream(messages):
+            yield delta
+
+    async def run(self, user_message, session, memory_messages, retrieved=None, **kw):
+        intent = kw.get("intent", "product_consult")
+        messages = self._build_messages(user_message, memory_messages, retrieved)
 
         out = await self._llm_loop(messages)
         reply = out["content"].strip()

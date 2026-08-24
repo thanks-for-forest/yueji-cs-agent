@@ -33,7 +33,9 @@ _RULES: list[tuple[str, list[str]]] = [
     ("order_query", ["订单号", "查一下我的订单", "我的订单", "待付款", "待发货", "取消订单", "下单了没", "我的订单号", "查订单", "查一下订单"]),
     # ---- 商品咨询（具体产品/属性类，先于泛化的护肤推荐）----
     ("product_consult", ["成分", "功效", "怎么用", "用法", "开封", "保质期", "多少钱", "价格", "适合我吗",
-                         "哪款", "有什么作用", "含酒精", "敏感肌可以用", "能用吗", "可以吗"]),
+                         "哪款", "有什么作用", "含酒精", "敏感肌可以用", "能用吗", "可以吗",
+                         "适合敏感肌", "适合干皮", "适合油皮", "适合混合", "适合什么肤质", "适合什么皮肤",
+                         "敏感肌能用", "干皮能用", "油皮能用", "是干什么的", "什么成分"]),
     ("skincare_recommend", ["推荐", "适合什么", "肤质", "油皮", "干皮", "敏感肌用", "搭配", "护肤步骤",
                             "水乳推荐", "选什么", "买什么好", "控油推荐", "痘痘肌", "混合皮", "用什么"]),
     ("transfer_human", ["投诉", "315", "曝光", "律师", "起诉", "维权", "媒体"]),
@@ -83,6 +85,10 @@ def _rule_route(text: str) -> tuple[str, float] | None:
     return None
 
 
+# LLM 兜底分类结果缓存（同文本避免重复调用，控制延迟与成本）
+_classify_cache: dict[str, tuple[str, float, str]] = {}
+
+
 async def route(text: str, emotion: str = "normal", history: list[dict] | None = None) -> tuple[str, float, str]:
     """返回 (intent, confidence, method: rule|llm)。history 为最近对话（含上轮助手回复），供指代消解。"""
     if emotion == "angry":
@@ -91,6 +97,14 @@ async def route(text: str, emotion: str = "normal", history: list[dict] | None =
     hit = _rule_route(text)
     if hit:
         return hit[0], hit[1], "rule"
+
+    # 缓存键：文本 + 最近一条历史（用于指代场景；独立查询可命中缓存）
+    hist_key = ""
+    if history:
+        hist_key = history[-1].get("content", "")[:60]
+    cache_key = f"{text}|{hist_key}"
+    if cache_key in _classify_cache:
+        return _classify_cache[cache_key]
 
     # LLM 兜底分类（带历史上下文，用于"那面霜呢/适合我吗"等指代）
     try:
@@ -111,7 +125,10 @@ async def route(text: str, emotion: str = "normal", history: list[dict] | None =
         intent = resp.content.strip().strip('"').strip("'").splitlines()[0].strip()
         if intent not in INTENTS:
             intent = "chitchat"
-        return intent, 0.7, "llm"
+        result = (intent, 0.7, "llm")
+        if len(_classify_cache) < 512:
+            _classify_cache[cache_key] = result
+        return result
     except Exception as e:  # noqa: BLE001
         logger.warning("LLM 分类失败，回退 chitchat：%s", e)
         return "chitchat", 0.5, "fallback"

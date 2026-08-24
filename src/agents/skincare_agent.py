@@ -139,7 +139,10 @@ class SkincareAgent(BaseAgent):
     tool_names = ["search_product"]
 
     async def run(self, user_message, session, memory_messages, retrieved=None, **kw):
-        tags = await extract_tags(user_message)
+        # 规则优先提取标签：关键词命中则跳过 LLM（省一次调用，降延迟）
+        tags = _keyword_tags(user_message)
+        if not tags["skin_types"] and not tags["skin_issues"]:
+            tags = await extract_tags(user_message)
         if not tags["skin_types"] and not tags["skin_issues"]:
             tags = _fallback_tags(user_message, memory_messages)
         products = load_products()

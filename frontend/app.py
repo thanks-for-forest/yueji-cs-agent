@@ -122,21 +122,38 @@ if prompt := st.chat_input("请输入您的问题…"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        with st.spinner("小悦正在思考…"):
-            try:
-                resp = httpx.post(
-                    f"{API}/api/chat",
-                    json={"session_id": st.session_state.session_id, "message": prompt},
-                    timeout=120,
-                )
+        placeholder = st.empty()
+        full_text = ""
+        data = {}
+        try:
+            with httpx.stream(
+                "POST",
+                f"{API}/api/chat/stream",
+                json={"session_id": st.session_state.session_id, "message": prompt},
+                timeout=120,
+            ) as resp:
                 resp.raise_for_status()
-                data = resp.json()
-            except Exception as e:  # noqa: BLE001
-                st.error(f"服务异常：{e}")
-                st.session_state.messages.pop()
-                st.stop()
+                for line in resp.iter_lines():
+                    if not line or not line.startswith("data:"):
+                        continue
+                    payload = line[5:].strip()
+                    if payload == "[DONE]":
+                        break
+                    try:
+                        ev = __import__("json").loads(payload)
+                    except Exception:  # noqa: BLE001
+                        continue
+                    if ev.get("type") == "delta":
+                        full_text += ev["text"]
+                        placeholder.markdown(full_text + "▌")
+                    elif ev.get("type") == "done":
+                        data = ev.get("result", {})
+        except Exception as e:  # noqa: BLE001
+            placeholder.error(f"服务异常：{e}")
+            st.session_state.messages.pop()
+            st.stop()
 
-        st.markdown(data["reply"])
+        placeholder.markdown(full_text)
         if data.get("sources"):
             srcs = " · ".join(f"`{s['name']}`" for s in data["sources"][:3])
             st.caption(f"📎 来源：{srcs}")
@@ -151,11 +168,11 @@ if prompt := st.chat_input("请输入您的问题…"):
 
         st.session_state.messages.append({
             "role": "assistant",
-            "content": data["reply"],
+            "content": full_text,
             "meta": data,
         })
         st.session_state.meta = {
-            "emotion": f"{EMOJI.get(data.get('emotion','normal'),'')} {data.get('emotion','normal')}",
+            "emotion": f"{EMOJI.get(data.get('emotion', 'normal'), '')} {data.get('emotion', 'normal')}",
             "intent": data.get("intent", "-"),
             "transferred": data.get("transferred", False),
             "ticket": data.get("extra", {}).get("ticket") or data.get("extra", {}).get("ticket_id", "-"),

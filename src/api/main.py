@@ -93,6 +93,30 @@ async def chat(req: ChatReq):
     return result
 
 
+@app.post("/api/chat/stream")
+async def chat_stream(req: ChatReq):
+    """SSE 流式对话：data: {"type":"delta","text":"..."} ... data: {"type":"done","result":{...}}"""
+    import json as _json
+
+    from fastapi.responses import StreamingResponse
+
+    from src.api.deps import check_rate_limit
+
+    check_rate_limit(req.session_id, settings.RATE_LIMIT_PER_MIN)
+    orchestrator = get_orchestrator()
+
+    async def gen():
+        try:
+            async for event in orchestrator.handle_stream(req.session_id, req.message):
+                yield f"data: {_json.dumps(event, ensure_ascii=False)}\n\n"
+        except Exception as e:  # noqa: BLE001
+            logger.exception("流式聊天异常")
+            yield f"data: {_json.dumps({'type': 'error', 'text': str(e)}, ensure_ascii=False)}\n\n"
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(gen(), media_type="text/event-stream")
+
+
 # ---------------- 调试/工具 ----------------
 @app.get("/health")
 async def health():
