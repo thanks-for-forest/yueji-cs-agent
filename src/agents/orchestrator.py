@@ -51,7 +51,7 @@ class AgentOrchestrator:
         # ---------- 1) 安全护栏 ----------
         bad_word = contains_sensitive(user_message)
         if bad_word:
-            await self._finish(session_id, session, SENSITIVE_REPLY, "blocked_sensitive", extra={"bad_word": bad_word})
+            await self._finish(session_id, session, SENSITIVE_REPLY, "blocked_sensitive")
             return self._payload(session_id, SENSITIVE_REPLY, [], "chitchat", "normal", "blocked", {"bad_word": bad_word})
         if detect_prompt_injection(user_message):
             await self._finish(session_id, session, INJECTION_REPLY, "blocked_injection")
@@ -62,9 +62,13 @@ class AgentOrchestrator:
         need_transfer = await self.svc.push_emotion(session_id, emotion)
         session["meta"] = await self.svc.update_meta(session_id)
 
-        # ---------- 3) 意图路由（会话状态优先于规则） ----------
+        # ---------- 3) 意图路由（会话状态优先于规则；LLM 兜底带历史消解指代） ----------
+        memory = await self.svc.build_memory_messages(session)
+        # 记忆末尾是刚保存的本轮用户消息，剥离：路由历史与 Agent 上下文都不应重复
+        if memory and memory[-1].get("role") == "user":
+            memory = memory[:-1]
         step = session["meta"].get("step", "")
-        intent, confidence, method = await route(user_message, emotion)
+        intent, confidence, method = await route(user_message, emotion, history=memory)
         if step == "confirm":
             # 售后等待确认阶段：任何回复都先交给售后 Agent 判断
             intent, confidence, method = "aftersale", 1.0, "state"
@@ -72,7 +76,6 @@ class AgentOrchestrator:
 
         # ---------- 4) 分发 ----------
         agent_name = intent_to_agent(intent)
-        memory = await self.svc.build_memory_messages(session)
         retrieved = None
         if intent in NEED_RETRIEVAL_INTENTS and agent_name in ("product", "aftersale"):
             retrieved = await retrieve_context(user_message)

@@ -787,11 +787,12 @@ yueji-cs-agent/
 
 > 相对参考文档的 3 周增加 1 周缓冲，用于环境适配（Python 3.14、模型下载）与检索评测实验。
 
-### M0 准备（第 0 天，半天）
+### M0 准备（第 0 天，半天）✅ 已完成
 
-- [ ] 注册 DeepSeek 开放平台，获取 API Key，确认账户余额；
-- [ ] 创建项目骨架（git init、目录、requirements、.env.example）；
-- [ ] 跑 `scripts/check_env.py`：依赖安装、embedding/rerank 模型下载（ModelScope）、DeepSeek 连通性。
+- [x] 获取 DeepSeek API Key 并验证连通（实测往返 ~1.1s）
+- [x] 创建项目骨架（git init、目录、requirements、.env.example）
+- [x] 环境自检通过：依赖全装（Python 3.14）、Embedding 用 Ollama bge-m3（本机已装，无需下载）、DeepSeek 连通
+- [x] 补充发现：本机 Ollama 提供 bge-m3 与 qwen2.5（兜底 LLM），技术栈据此微调（见开发笔记 ADR-002）
 
 ### W1 环境与数据（第 1 周）
 
