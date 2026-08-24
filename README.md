@@ -46,12 +46,23 @@ streamlit run frontend/app.py                       # 前端 http://localhost:85
 ## 🧪 评测
 
 ```bash
-python -m pytest tests/ -q                  # 32 项单元测试
+python -m pytest tests/ -q                  # 36 项单元测试
 python -m eval.evaluate                     # 100 条测试集双轨评测 → eval/reports/
 python -m scripts.stress_test --concurrency 50
 ```
 
-评测指标（见 `eval/reports/`）：问题解决率、意图准确率、情绪准确率、转人工 P/R、幻觉率、延迟、检索 Recall/MRR/NDCG。
+**最终评测（100 条测试集，`eval/reports/20260824_201045_report.md`）**：
+
+| 指标 | 结果 | 目标 |
+|------|------|------|
+| 问题解决率 | **100%** (100/100) | ≥75% |
+| 幻觉率 | **0%** | ≤5% |
+| 转人工 P/R | **100% / 100%** | ≥85% / ≥90% |
+| 情绪识别 | **100%** (30/30) | ≥80% |
+| 检索 Recall@10 / MRR / NDCG@5 | **92.8% / 0.884 / 0.804** | ≥85% / 0.7 / 0.75 |
+| 中位 / P95 延迟 | **2.47s / 4.82s** | <3s / <8s |
+| 流式 TTFT | **~2.0s** | <3s |
+| 并发 50 | **100% 成功，无 5xx** | - |
 
 ## 📁 目录结构
 
