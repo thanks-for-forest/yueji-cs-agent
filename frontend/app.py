@@ -5,6 +5,8 @@
 """
 from __future__ import annotations
 
+import urllib.parse
+
 import httpx
 import streamlit as st
 
@@ -15,6 +17,22 @@ API = f"http://127.0.0.1:{settings.API_PORT}"
 st.set_page_config(page_title="悦己美妆智能客服", page_icon="💄", layout="wide")
 
 EMOJI = {"normal": "🙂", "negative": "😟", "angry": "😡"}
+
+
+def render_sources(sources: list[dict]) -> None:
+    """把〔来源〕渲染为可点击链接：点击在新窗口打开知识库原文。"""
+    if not sources:
+        return
+    links = []
+    for s in sources[:5]:
+        label = s.get("name") or s.get("source_id") or ""
+        href = f"{API}/api/source/{urllib.parse.quote(label)}"
+        links.append(
+            f'<a href="{href}" target="_blank" rel="noopener" '
+            f'style="color:#64ffda;text-decoration:none;border-bottom:1px dashed #64ffda;">'
+            f'📄 {label[:24]}</a>'
+        )
+    st.markdown("📎 来源：" + " &nbsp;·&nbsp; ".join(links), unsafe_allow_html=True)
 
 
 def new_session() -> None:
@@ -68,9 +86,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
         m = msg.get("meta", {})
-        if m.get("sources"):
-            srcs = " · ".join(f"`{s['name']}`" for s in m["sources"][:3])
-            st.caption(f"📎 来源：{srcs}")
+        render_sources(m.get("sources"))
         if m.get("action") == "order_queried" and m.get("extra", {}).get("tool_call"):
             _render_order_card(m["extra"]["tool_call"])
         if m.get("action") == "ticket_created":
@@ -162,9 +178,7 @@ if prompt := st.chat_input("请输入您的问题…"):
             st.stop()
 
         placeholder.markdown(full_text)
-        if data.get("sources"):
-            srcs = " · ".join(f"`{s['name']}`" for s in data["sources"][:3])
-            st.caption(f"📎 来源：{srcs}")
+        render_sources(data.get("sources"))
         if data.get("action") == "order_queried" and data.get("extra", {}).get("tool_call"):
             _render_order_card(data["extra"]["tool_call"])
         if data.get("action") == "ticket_created":

@@ -13,6 +13,7 @@ from src.tools.registry import ToolRegistry
 logger = logging.getLogger(__name__)
 
 SOURCE_RE = re.compile(r"〔来源[:：]\s*([^〕]+)〕")
+_SRC_ID_RE = re.compile(r"(P\d{3}|F\d{3}|POL-\d+)", re.IGNORECASE)
 
 
 @dataclass
@@ -35,11 +36,13 @@ class AgentResult:
 
 
 def parse_sources(reply: str) -> list[dict]:
-    """从回复中解析〔来源: xxx〕标注。"""
+    """从回复中解析〔来源: xxx〕标注，并提取干净的来源 ID（P011/F020/POL-1）供溯源链接。"""
     out = []
     for m in SOURCE_RE.finditer(reply):
-        name = m.group(1).strip()
-        out.append({"name": name, "type": "unknown", "source_id": name})
+        label = m.group(1).strip()
+        sid_match = _SRC_ID_RE.search(label)
+        sid = sid_match.group(1).upper() if sid_match else label
+        out.append({"name": label, "type": "unknown", "source_id": sid})
     return out
 
 
