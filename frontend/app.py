@@ -13,7 +13,7 @@ import streamlit as st
 
 from config import settings
 
-API = f"http://127.0.0.1:{settings.API_PORT}"
+API = settings.API_BASE_URL
 
 st.set_page_config(page_title="悦己美妆智能客服", page_icon="💄", layout="wide")
 

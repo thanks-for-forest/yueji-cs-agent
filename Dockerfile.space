@@ -1,0 +1,41 @@
+# HF Spaces 专用：单容器跑 Ollama + FastAPI(:8000 内部) + Streamlit(:8501 内部) + Caddy(:7860 对外同源代理)
+# 参考 docs/公网部署方案.md 方案 A
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip python3-venv curl ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Ollama（嵌入模型运行时）
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
+# Caddy（同源反向代理：/api/* → FastAPI，其余 → Streamlit）
+RUN curl -fsSL -o /usr/local/bin/caddy "https://caddyserver.com/api/download?os=linux&arch=amd64" && \
+    chmod +x /usr/local/bin/caddy
+
+WORKDIR /app
+COPY requirements.txt .
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install -r requirements.txt
+
+COPY . .
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    API_BASE_URL="" \
+    OLLAMA_BASE_URL="http://127.0.0.1:11434" \
+    LANGFUSE_PUBLIC_KEY="" \
+    LANGFUSE_SECRET_KEY=""
+
+# 数据卷（会话/订单库/追踪持久化）
+VOLUME ["/app/data"]
+
+COPY Caddyfile.space /Caddyfile.space
+COPY entrypoint.space.sh /entrypoint.space.sh
+RUN chmod +x /entrypoint.space.sh
+
+EXPOSE 7860
+CMD ["/entrypoint.space.sh"]

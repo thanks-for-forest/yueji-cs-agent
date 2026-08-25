@@ -73,6 +73,9 @@ EMOTION_STRONG_PUNCT = ["！！", "？？", "!!!", "？？？", "！！！"]
 EMOTION_TRANSFER_KW = ["投诉", "315", "曝光", "律师", "媒体", "起诉", "维权", "人工"]
 
 # ---------- 服务 ----------
+# 前端访问后端的地址。默认本机；公网部署设为空串 "" = 同源相对路径
+# （由反向代理把 /api/* 转发到 FastAPI，来源链接/订单卡片才能被浏览器访问）
+API_BASE_URL: str = os.getenv("API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
 API_PORT: int = int(os.getenv("API_PORT", "8000"))
 WEB_PORT: int = int(os.getenv("WEB_PORT", "8501"))
