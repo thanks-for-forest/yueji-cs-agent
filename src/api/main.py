@@ -50,9 +50,10 @@ class ChatReq(BaseModel):
 
 # ---------------- 会话 ----------------
 @app.post("/api/session")
-async def create_session(req: CreateSessionReq):
+async def create_session(req: CreateSessionReq | None = None):
+    """创建会话。body 可缺省（兼容无 body 的客户端）。"""
     svc = get_session_service()
-    session = await svc.create_session(user_id=req.user_id)
+    session = await svc.create_session(user_id=req.user_id if req else "")
     return {"session_id": session["session_id"], "created_at": session["created_at"]}
 
 

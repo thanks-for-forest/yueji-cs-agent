@@ -18,11 +18,19 @@ EMOJI = {"normal": "🙂", "negative": "😟", "angry": "😡"}
 
 
 def new_session() -> None:
-    resp = httpx.post(f"{API}/api/session")
-    data = resp.json()
-    st.session_state.session_id = data["session_id"]
-    st.session_state.messages = []
-    st.session_state.meta = {}
+    try:
+        resp = httpx.post(f"{API}/api/session", json={}, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+        st.session_state.session_id = data["session_id"]
+        st.session_state.messages = []
+        st.session_state.meta = {}
+    except Exception as e:  # noqa: BLE001
+        st.error(
+            f"⚠️ 无法连接后端服务（{API}）：{e}\n\n"
+            "请先启动 API：`python -m uvicorn src.api.main:app --port 8000`"
+        )
+        st.stop()
 
 
 if "session_id" not in st.session_state or "messages" not in st.session_state:
