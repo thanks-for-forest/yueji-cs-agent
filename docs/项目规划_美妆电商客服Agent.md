@@ -159,8 +159,9 @@ graph TD
     LLM --> H
     LLM --> EMOTION
 
-    LF[Langfuse 可观测性<br/>调用链/Token/延迟] -.-> API
+    LF[自研追踪器<br/>节点耗时/LLM计数/JSONL] -.-> API
     LF -.-> LLM
+    LFO[(Langfuse 可选上报)] -.-> LF
 
     style ROUTER fill:#7c9cff22,stroke:#7c9cff
     style RAG fill:#64ffda22,stroke:#64ffda
@@ -177,7 +178,7 @@ graph TD
 | Agent 层 | 5 个专项 Agent | 场景对话、工具调用、决策 | LangChain Agent、Function Calling |
 | 能力层 | RAG + 工具集 + 规则引擎 | 检索、订单查询、售后判定 | Chroma、BM25、Rerank、SQL |
 | 数据层 | 向量库 + 关系库 + 文件 | 产品/FAQ/订单/政策/工单 | Chroma、SQLite、JSON |
-| 可观测层 | Langfuse | 调用链、Token 消耗、延迟 | Langfuse SDK |
+| 可观测层 | 自研 JSONL 追踪器（Langfuse 可选） | 节点耗时、LLM 计数、延迟分布 | Tracer + trace_report |
 
 ### 3.3 一次完整对话时序
 
@@ -550,7 +551,7 @@ query_order(order_id: str, phone_tail: str) -> {
 |------|---------|
 | Prompt 注入（"忽略以上指令…"） | 系统提示词声明边界 + 输入检测规则（检测"忽略/越狱/扮演系统"等模式）+ 工具调用白名单（模型只能调用已注册工具，无法输出任意代码） |
 | 越权查询他人订单 | 订单查询强制"订单号 + 手机尾号"双校验；对话中不含用户手机号时拒绝输出 |
-| 隐私泄露 | 日志与 Langfuse 中手机号/姓名脱敏（正则替换 `\d{11}` → `138****0000`）；工单仅存必要字段 |
+| 隐私泄露 | 日志与追踪记录中手机号/姓名脱敏（正则替换 `\d{11}` → `138****0000`）；工单仅存必要字段 |
 | 敏感内容（涉黄暴/违法） | 敏感词表拦截 → 模板话术拒绝 + 标记会话 |
 | 滥用/刷接口 | FastAPI 限流（按 session_id + IP，如 20 req/min）+ 单会话长度上限（200 轮） |
 | 幻觉/编造 | §5.3 引用协议 + 拒答协议 + 幻觉率评测门禁（≥5% 不发布） |
@@ -606,7 +607,7 @@ query_order(order_id: str, phone_tail: str) -> {
 | 后端 | **FastAPI + uvicorn** | 异步 + WebSocket + 流式原生支持 | Flask（同步，流式麻烦） |
 | 前端 | **Streamlit 1.62** | 纯 Python、聊天 UI 快、生态组件足 | Gradio、Vue+Element |
 | 数据库 | **SQLite**（内置 + 连接池） | 单机足够，零运维；`aiosqlite` 异步访问 | PostgreSQL（部署期可迁移） |
-| 可观测 | **Langfuse**（自托管或云） | 调用链/Token/延迟可视化，简历加分项 | LangSmith（付费） |
+| 可观测 | **自研 JSONL 追踪器**（默认）+ Langfuse（可选上报） | 零依赖本地全链路追踪；Langfuse 云端/自托管可选 | LangSmith、Arize Phoenix |
 | 部署 | **Docker + docker-compose** | 一键启动；演示/交付标准化 | systemd 直接跑 |
 | 压测 | **locust**（可选） | 验证 50+ 并发目标 | 简单 asyncio 脚本 |
 
@@ -629,8 +630,8 @@ sentence-transformers>=5.0        # 本地 embedding + rerank
 sqlalchemy>=2.0
 aiosqlite>=0.20
 pandas>=2.2
-# 可观测
-langfuse>=4.0
+# 可观测（自研追踪器零依赖；Langfuse 可选上报）
+langfuse>=4.0  # 可选
 # 工具
 python-dotenv>=1.0
 pydantic>=2.7
@@ -761,7 +762,7 @@ yueji-cs-agent/
 │   │   └── slots.py              # 槽位状态机（订单/售后复用）
 │   └── utils/
 │       ├── security.py           # 脱敏/注入检测/敏感词
-│       └── tracing.py            # Langfuse 埋点
+│       └── tracing.py            # 自研 JSONL 追踪（Langfuse 可选）
 ├── frontend/
 │   └── app.py                    # Streamlit 界面
 ├── eval/
@@ -862,7 +863,7 @@ yueji-cs-agent/
 | SSE 流式输出 + 打字机效果 | API + 前端联调 |
 | 100 条测试集 + 双轨评测脚本 | `eval/*` |
 | 针对性调优（prompt/检索参数/阈值） | `eval/reports/w4_*.md` + 调优曲线 |
-| Langfuse 接入（调用链/Token/延迟） | `utils/tracing.py` |
+| 自研追踪器接入（节点耗时/LLM计数/JSONL），Langfuse 可选 | `utils/tracing.py`、`scripts/trace_report.py` |
 | Docker + docker-compose | 一键启动 |
 | locust 压测 50 并发 | 压测报告 |
 | README + 开发笔记 + 部署手册 + 简历素材 | `docs/*` |
@@ -901,7 +902,7 @@ yueji-cs-agent/
 | 运行期单会话成本 | ~¥0.01–0.03/会话 | deepseek-chat 定价（输入约 ¥0.5–2/百万token、输出约 ¥8/百万token，随缓存命中波动） |
 | 本地模型 | ¥0（开源） | bge-small-zh / bge-reranker-base 均 Apache/MIT 类许可 |
 | 基础设施 | ¥0 | 全部本地/Docker 运行，无云费用 |
-| Langfuse | ¥0（自托管）或免费额度 | 云版有免费额度 |
+| 自研追踪器 / Langfuse | ¥0（自研零依赖）；Langfuse 云版有免费额度 | 可选上报 |
 
 > 说明：以上为规划期估算，**开发第 0 天核对官方定价页**后写入开发笔记。
 
@@ -919,7 +920,7 @@ yueji-cs-agent/
 | 🧠 多 Agent 路由架构 | 三级意图路由（关键词→分类→LLM）+ 5 个专项 Agent，情绪检测触发人工兜底 |
 | 🛡️ 安全与可靠性 | Prompt 注入防护、订单双校验防越权、隐私脱敏、幻觉率评测门禁 |
 | 📊 量化评测体系 | 100 条 8 类测试集 + 双轨评测（自动 + LLM-as-Judge）+ 7 项指标达标数据 |
-| 🏗️ 工程化完整 | FastAPI + WebSocket 流式 + Streamlit + Docker + Langfuse，50 并发压测通过 |
+| 🏗️ 工程化完整 | FastAPI + SSE 流式 + Streamlit + Docker + 自研全链路追踪器，50 并发压测通过 |
 
 ### 15.2 简历项目描述模板
 

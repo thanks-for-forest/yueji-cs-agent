@@ -46,7 +46,7 @@ streamlit run frontend/app.py                       # 前端 http://localhost:85
 ## 🧪 评测
 
 ```bash
-python -m pytest tests/ -q                  # 46 项单元测试（含 LangGraph 图测试）
+python -m pytest tests/ -q                  # 50 项单元测试（含 LangGraph/追踪测试）
 python -m eval.evaluate                     # 100 条测试集双轨评测（走 LangGraph 路径）
 python -m scripts.compare_retrieval         # 检索四策略对比 → docs/检索策略对比报告.md
 python -m scripts.trace_report --html        # 自研可观测性报告 + HTML 看板
