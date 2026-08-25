@@ -53,7 +53,7 @@ python -m scripts.trace_report --html        # 自研可观测性报告 + HTML �
 python -m scripts.stress_test --concurrency 50
 ```
 
-**最终评测（100 条测试集，`eval/reports/20260824_201045_report.md`）**：
+**最终评测（100 条测试集，`eval/reports/20260825_204702_report.md`）**：
 
 | 指标 | 结果 | 目标 |
 |------|------|------|
