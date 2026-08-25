@@ -74,29 +74,6 @@ with st.sidebar:
 st.title("💬 小悦 · 悦己美妆客服")
 st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
 
-# 会话状态条
-meta = st.session_state.get("meta", {})
-cols = st.columns(4)
-cols[0].metric("会话状态", meta.get("emotion", "normal"), delta=None)
-cols[1].metric("当前意图", meta.get("intent", "-"))
-cols[2].metric("转人工", "✅ 已转接" if meta.get("transferred") else "-")
-cols[3].metric("工单", meta.get("ticket", "-"))
-
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-        m = msg.get("meta", {})
-        render_sources(m.get("sources"))
-        if m.get("action") == "order_queried" and m.get("extra", {}).get("tool_call"):
-            _render_order_card(m["extra"]["tool_call"])
-        if m.get("action") == "ticket_created":
-            st.success(f"✅ 售后工单已生成：{m.get('extra', {}).get('ticket', '')}")
-        if m.get("action") == "transfer":
-            st.warning(f"🔄 已转接人工，工单号：{m.get('extra', {}).get('ticket_id', '')}")
-        if m.get("intent") == "skincare_recommend" and m.get("extra", {}).get("recommendations"):
-            _render_recommendations(m["extra"])
-
-
 def _render_order_card(tool_call: dict) -> None:
     """根据工具调用参数重新查询订单并渲染卡片。"""
     args = tool_call.get("arguments", {})
@@ -137,6 +114,29 @@ def _render_recommendations(extra: dict) -> None:
     if extra.get("routine"):
         st.markdown("**搭配建议**：")
         st.markdown(" → ".join(f"{r['name']}（¥{r['price']}）" for r in extra["routine"]))
+
+
+# 会话状态条
+meta = st.session_state.get("meta", {})
+cols = st.columns(4)
+cols[0].metric("会话状态", meta.get("emotion", "normal"), delta=None)
+cols[1].metric("当前意图", meta.get("intent", "-"))
+cols[2].metric("转人工", "✅ 已转接" if meta.get("transferred") else "-")
+cols[3].metric("工单", meta.get("ticket", "-"))
+
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.markdown(msg["content"])
+        m = msg.get("meta", {})
+        render_sources(m.get("sources"))
+        if m.get("action") == "order_queried" and m.get("extra", {}).get("tool_call"):
+            _render_order_card(m["extra"]["tool_call"])
+        if m.get("action") == "ticket_created":
+            st.success(f"✅ 售后工单已生成：{m.get('extra', {}).get('ticket', '')}")
+        if m.get("action") == "transfer":
+            st.warning(f"🔄 已转接人工，工单号：{m.get('extra', {}).get('ticket_id', '')}")
+        if m.get("intent") == "skincare_recommend" and m.get("extra", {}).get("recommendations"):
+            _render_recommendations(m["extra"])
 
 
 # ---------------- 输入 ----------------
