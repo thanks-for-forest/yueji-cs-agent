@@ -42,7 +42,7 @@ def _order_public_view(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _fetch_order(order_id: str, phone_tail: str) -> dict | None:
+async def _fetch_order(order_id: str, phone_tail: str, user_id: str = "") -> dict | None:
     conn = await get_conn()
     cur = await conn.execute(
         "SELECT * FROM orders WHERE order_id = ?", (order_id,)
@@ -53,12 +53,14 @@ async def _fetch_order(order_id: str, phone_tail: str) -> dict | None:
     data = dict(row)
     if data["phone"][-4:] != phone_tail:
         return None  # 手机尾号不匹配视为未找到（避免泄露存在性）
+    if user_id and data["user_id"] != user_id:
+        return None  # 归属校验：绑定用户时仅返回本人订单（防越权）
     return data
 
 
-async def query_order(order_id: str, phone_tail: str) -> dict:
-    """按订单号+手机尾号查询订单。"""
-    order = await _fetch_order(order_id.strip(), phone_tail.strip())
+async def query_order(order_id: str, phone_tail: str, user_id: str = "") -> dict:
+    """按订单号+手机尾号查询订单（绑定用户时仅查本人订单）。"""
+    order = await _fetch_order(order_id.strip(), phone_tail.strip(), user_id)
     if order is None:
         return {"found": False, "message": "未找到匹配订单，请核对订单号与手机尾号"}
     view = _order_public_view(order)
@@ -66,9 +68,9 @@ async def query_order(order_id: str, phone_tail: str) -> dict:
     return view
 
 
-async def query_logistics(order_id: str, phone_tail: str) -> dict:
-    """查询物流动态。"""
-    order = await _fetch_order(order_id.strip(), phone_tail.strip())
+async def query_logistics(order_id: str, phone_tail: str, user_id: str = "") -> dict:
+    """查询物流动态（绑定用户时仅查本人订单）。"""
+    order = await _fetch_order(order_id.strip(), phone_tail.strip(), user_id)
     if order is None:
         return {"found": False, "message": "未找到匹配订单，请核对订单号与手机尾号"}
     tracking = _parse_tracking(order.get("tracking"))
@@ -108,6 +110,7 @@ def build_order_tools() -> list[Tool]:
                 "required": ["order_id", "phone_tail"],
             },
             func=query_order,
+            user_context=True,
         ),
         Tool(
             name="query_logistics",
@@ -121,5 +124,6 @@ def build_order_tools() -> list[Tool]:
                 "required": ["order_id", "phone_tail"],
             },
             func=query_logistics,
+            user_context=True,
         ),
     ]

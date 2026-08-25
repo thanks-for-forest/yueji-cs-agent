@@ -18,11 +18,12 @@ async def check_aftersale_eligibility(
     resaleable: bool = True,
     has_evidence: bool = False,
     mismatch_confirmed: bool = False,
+    user_id: str = "",
 ) -> dict:
-    """按订单与售后类型做规则判定。"""
+    """按订单与售后类型做规则判定（绑定用户时仅查本人订单）。"""
     if issue_type not in VALID_TYPES:
         return {"eligible": False, "message": f"不支持的售后类型：{issue_type}", "reasons": [], "alternative": "请选择：退货退款 / 质量问题 / 换货 / 仅退款 / 补发"}
-    order = await _fetch_order(order_id.strip(), phone_tail.strip())
+    order = await _fetch_order(order_id.strip(), phone_tail.strip(), user_id)
     if order is None:
         return {"found": False, "eligible": False, "message": "未找到匹配订单，请核对订单号与手机尾号"}
     # 签收天数：以物流最后事件时间近似，缺失则按下单时间
@@ -50,11 +51,12 @@ async def create_ticket(
     reason: str,
     description: str,
     evidence: list[str] | None = None,
+    user_id: str = "",
 ) -> dict:
-    """校验订单与资格后生成售后工单。"""
+    """校验订单与资格后生成售后工单（绑定用户时仅查本人订单）。"""
     if type not in VALID_TYPES:
         return {"created": False, "message": f"不支持的售后类型：{type}"}
-    order = await _fetch_order(order_id.strip(), phone_tail.strip())
+    order = await _fetch_order(order_id.strip(), phone_tail.strip(), user_id)
     if order is None:
         return {"created": False, "message": "未找到匹配订单，请核对订单号与手机尾号"}
 
@@ -133,6 +135,7 @@ def build_aftersale_tools() -> list[Tool]:
                 "required": ["order_id", "phone_tail", "issue_type"],
             },
             func=check_aftersale_eligibility,
+            user_context=True,
         ),
         Tool(
             name="create_ticket",
@@ -150,5 +153,6 @@ def build_aftersale_tools() -> list[Tool]:
                 "required": ["order_id", "phone_tail", "type", "reason", "description"],
             },
             func=create_ticket,
+            user_context=True,
         ),
     ]

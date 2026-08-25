@@ -87,7 +87,7 @@ class OrderAgent(BaseAgent):
             *memory_messages,
             {"role": "user", "content": tool_hint + "\n用户问题：" + user_message},
         ]
-        out = await self._llm_loop(messages)
+        out = await self._llm_loop(messages, ctx={"user_id": session.get("user_id", "") or ""})
         reply = out["content"].strip()
 
         # 4) 结构化输出（前端订单卡片）：从工具执行记录还原

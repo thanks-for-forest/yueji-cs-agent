@@ -78,7 +78,7 @@ class AftersaleAgent(BaseAgent):
         if context:
             messages.append({"role": "system", "content": f"<知识片段>\n{context}\n</知识片段>"})
         messages.append({"role": "user", "content": user_message})
-        out = await self._llm_loop(messages)
+        out = await self._llm_loop(messages, ctx={"user_id": session.get("user_id", "") or ""})
         reply = out["content"].strip()
         sources = parse_sources(reply)
         if not sources and retrieved:
@@ -161,6 +161,7 @@ class AftersaleAgent(BaseAgent):
                     order_id=slots["order_id"], phone_tail=slots["phone_tail"],
                     type=slots["issue_type"], reason=slots["issue_type"],
                     description=user_message,
+                    user_id=session.get("user_id", "") or "",
                 )
                 reply = await self._prose(SYSTEM_PROMPT_AFTERSALE, result, user_message)
                 action = "ticket_created" if result.get("created") else "none"
@@ -182,6 +183,7 @@ class AftersaleAgent(BaseAgent):
         result = await check_aftersale_eligibility(
             order_id=slots["order_id"], phone_tail=slots["phone_tail"],
             issue_type=slots["issue_type"], description=user_message,
+            user_id=session.get("user_id", "") or "",
         )
         reply = await self._prose(SYSTEM_PROMPT_AFTERSALE, result, user_message)
         action = "eligibility_checked"

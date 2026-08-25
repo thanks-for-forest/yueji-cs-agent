@@ -46,26 +46,35 @@ class CreateSessionReq(BaseModel):
 class ChatReq(BaseModel):
     session_id: str = Field(min_length=4, max_length=64)
     message: str = Field(min_length=1, max_length=1000)
+    user_id: str = ""  # 会话归属校验用：非空时须与会话绑定的 user_id 一致
+
+
+def _check_ownership(session: dict | None, user_id: str) -> None:
+    """会话归属校验：会话绑定了用户时，调用方必须声明同一用户。"""
+    if session and session.get("user_id") and user_id and session["user_id"] != user_id:
+        raise HTTPException(status_code=403, detail=f"无权访问该会话（归属用户 {session['user_id']}）")
 
 
 # ---------------- 会话 ----------------
 @app.post("/api/session")
 async def create_session(req: CreateSessionReq | None = None):
-    """创建会话。body 可缺省（兼容无 body 的客户端）。"""
+    """创建会话（绑定 user_id，用于多用户区分与订单隔离）。body 可缺省。"""
     svc = get_session_service()
     session = await svc.create_session(user_id=req.user_id if req else "")
-    return {"session_id": session["session_id"], "created_at": session["created_at"]}
+    return {"session_id": session["session_id"], "user_id": session.get("user_id", ""), "created_at": session["created_at"]}
 
 
 @app.get("/api/session/{session_id}/history")
-async def session_history(session_id: str):
+async def session_history(session_id: str, user_id: str = ""):
     svc = get_session_service()
     session = await svc.get_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="会话不存在")
+    _check_ownership(session, user_id)
     msgs = await svc.get_messages(session_id)
     return {
         "session_id": session_id,
+        "user_id": session.get("user_id", ""),
         "emotion": session.get("emotion", "normal"),
         "status": session.get("status", "active"),
         "meta": session.get("meta", {}),
@@ -74,9 +83,12 @@ async def session_history(session_id: str):
 
 
 @app.get("/api/sessions")
-async def list_sessions(limit: int = 20):
+async def list_sessions(limit: int = 20, user_id: str = ""):
     svc = get_session_service()
-    return {"sessions": await svc.list_sessions(limit=limit)}
+    sessions = await svc.list_sessions(limit=limit)
+    if user_id:
+        sessions = [s for s in sessions if s.get("user_id") == user_id]
+    return {"sessions": sessions}
 
 
 # ---------------- 聊天 ----------------
@@ -86,6 +98,7 @@ async def chat(req: ChatReq):
 
     check_rate_limit(req.session_id, settings.RATE_LIMIT_PER_MIN)
     orchestrator = get_orchestrator()
+    _check_ownership(await get_session_service().get_session(req.session_id), req.user_id)
     try:
         result = await orchestrator.handle(req.session_id, req.message)
     except Exception as e:  # noqa: BLE001
@@ -104,6 +117,7 @@ async def chat_stream(req: ChatReq):
     from src.api.deps import check_rate_limit
 
     check_rate_limit(req.session_id, settings.RATE_LIMIT_PER_MIN)
+    _check_ownership(await get_session_service().get_session(req.session_id), req.user_id)
     orchestrator = get_orchestrator()
 
     async def gen():

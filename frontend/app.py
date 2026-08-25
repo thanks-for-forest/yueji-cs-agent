@@ -43,7 +43,8 @@ def render_sources(sources: list[dict]) -> None:
 
 def new_session() -> None:
     try:
-        resp = httpx.post(f"{API}/api/session", json={}, timeout=10)
+        uid = st.session_state.get("user_id", "") or ""
+        resp = httpx.post(f"{API}/api/session", json={"user_id": uid}, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         st.session_state.session_id = data["session_id"]
@@ -57,6 +58,9 @@ def new_session() -> None:
         st.stop()
 
 
+if "user_id" not in st.session_state:
+    st.session_state.user_id = "U001"  # 演示用户（订单数据 U001-U010）
+
 if "session_id" not in st.session_state or "messages" not in st.session_state:
     new_session()
 
@@ -64,10 +68,16 @@ if "session_id" not in st.session_state or "messages" not in st.session_state:
 with st.sidebar:
     st.title("💄 悦己 YUEJI")
     st.caption("美妆电商智能客服 Agent")
+    uid_input = st.text_input("👤 用户 ID", value=st.session_state.user_id, max_chars=20,
+                              help="会话绑定到该用户；订单查询只返回本人订单（可用 U001~U010 演示）")
+    if uid_input.strip() != st.session_state.user_id:
+        st.session_state.user_id = uid_input.strip() or "guest"
+        st.info("已切换用户，点击「新会话」以新身份开始")
     if st.button("🆕 新会话", use_container_width=True):
         new_session()
         st.rerun()
     st.divider()
+    st.markdown(f"**当前用户**：`{st.session_state.user_id}`")
     st.markdown("**会话 ID**")
     st.code(st.session_state.session_id, language=None)
     st.divider()
@@ -159,7 +169,8 @@ if prompt := st.chat_input("请输入您的问题…"):
             with httpx.stream(
                 "POST",
                 f"{API}/api/chat/stream",
-                json={"session_id": st.session_state.session_id, "message": prompt},
+                json={"session_id": st.session_state.session_id, "message": prompt,
+                      "user_id": st.session_state.get("user_id", "")},
                 timeout=120,
             ) as resp:
                 resp.raise_for_status()

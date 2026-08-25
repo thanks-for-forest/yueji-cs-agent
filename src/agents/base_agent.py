@@ -56,8 +56,8 @@ class BaseAgent:
         self._tools = [t for t in registry.schemas() if t["name"] in self.tool_names]
 
     # ---------- 工具调用循环 ----------
-    async def _llm_loop(self, messages: list[dict]) -> dict:
-        """带工具的 LLM 循环，返回 LLMResponse（dict 视图）。"""
+    async def _llm_loop(self, messages: list[dict], ctx: dict | None = None) -> dict:
+        """带工具的 LLM 循环，返回 LLMResponse（dict 视图）。ctx 携带会话上下文（如 user_id）供工具归属校验。"""
         import json
 
         llm = get_llm()
@@ -82,7 +82,7 @@ class BaseAgent:
             messages.append(assistant_msg)
             for i, tc in enumerate(resp.tool_calls):
                 tools_used.append({"name": tc.name, "arguments": tc.arguments})
-                result = await self.registry.execute(tc.name, tc.arguments)
+                result = await self.registry.execute(tc.name, tc.arguments, context=ctx)
                 messages.append({"role": "tool", "content": result, "tool_call_id": tc.id or f"call_{i}"})
                 logger.info("Agent[%s] 调用工具 %s(%s)", self.name, tc.name, tc.arguments)
             resp = await llm.chat(messages, tools=self._tools or None)
@@ -93,8 +93,8 @@ class BaseAgent:
             "provider": resp.provider,
         }
 
-    async def _llm_loop_stream(self, messages: list[dict]) -> AsyncIterator[str]:
-        """流式最终回答（SSE）。
+    async def _llm_loop_stream(self, messages: list[dict], ctx: dict | None = None) -> AsyncIterator[str]:
+        """流式最终回答（SSE）。ctx 携带会话上下文（如 user_id），备用。
 
         设计：流式路径不预检工具调用（省一次非流式调用，保证 TTFT）。
         商品/政策/闲聊场景的 <知识片段> 上下文已足够支撑回答；
