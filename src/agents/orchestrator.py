@@ -21,7 +21,7 @@ from src.rag.retriever import retrieve_context
 from src.session.service import get_session_service
 from src.tools.registry import get_registry
 from src.utils.security import contains_sensitive, detect_prompt_injection
-from src.utils.tracing import graph_config
+from src.utils.tracing import Tracer, graph_config
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class AgentOrchestrator:
         }
 
     async def handle(self, session_id: str, user_message: str) -> dict:
-        """主路径：LangGraph 图执行（Supervisor-Worker），可选 Langfuse 全链路追踪。"""
+        """主路径：LangGraph 图执行（Supervisor-Worker），自研 JSONL 追踪 + 可选 Langfuse。"""
         session = await self.svc.get_session(session_id)
         if session is None:
             session = await self.svc.create_session(session_id=session_id)
@@ -52,11 +52,23 @@ class AgentOrchestrator:
         await self.svc.save_message(session_id, "user", user_message)
         session["meta"] = await self.svc.update_meta(session_id)  # 刷新（可能被并发修改）
 
-        final = await get_compiled_graph().ainvoke(
-            {"session_id": session_id, "user_message": user_message, "session": session},
-            config=graph_config(),
-        )
-        return final["payload"]
+        trace = Tracer.begin(session_id, user_message)
+        trace.user_id = session.get("user_id", "") or ""
+        payload: dict = {}
+        try:
+            final = await get_compiled_graph().ainvoke(
+                {"session_id": session_id, "user_message": user_message, "session": session},
+                config=graph_config(),
+            )
+            payload = final["payload"]
+        finally:
+            trace.intent = payload.get("intent", "")
+            trace.emotion = payload.get("emotion", "")
+            trace.action = payload.get("action", "")
+            trace.transferred = bool(payload.get("transferred"))
+            trace.reply_preview = payload.get("reply", "")
+            await Tracer.finish(trace)
+        return payload
 
     # ---------- 流式聊天（SSE） ----------
     STREAM_INTENTS = {"product_consult", "policy", "chitchat"}
@@ -71,18 +83,29 @@ class AgentOrchestrator:
         await self.svc.save_message(session_id, "user", user_message)
         session["meta"] = await self.svc.update_meta(session_id)
 
+        trace = Tracer.begin(session_id, user_message)
+        trace.user_id = session.get("user_id", "") or ""
+
         bad_word = contains_sensitive(user_message)
         if bad_word:
             reply = SENSITIVE_REPLY
             yield {"type": "delta", "text": reply}
             await self._finish(session_id, session, reply, "blocked_sensitive")
-            yield {"type": "done", "result": self._payload(session_id, reply, [], "chitchat", "normal", "blocked", {"bad_word": bad_word})}
+            payload = self._payload(session_id, reply, [], "chitchat", "normal", "blocked", {"bad_word": bad_word})
+            yield {"type": "done", "result": payload}
+            trace.action = "blocked"
+            trace.reply_preview = reply
+            await Tracer.finish(trace)
             return
         if detect_prompt_injection(user_message):
             reply = INJECTION_REPLY
             yield {"type": "delta", "text": reply}
             await self._finish(session_id, session, reply, "blocked_injection")
-            yield {"type": "done", "result": self._payload(session_id, reply, [], "chitchat", "normal", "blocked", {})}
+            payload = self._payload(session_id, reply, [], "chitchat", "normal", "blocked", {})
+            yield {"type": "done", "result": payload}
+            trace.action = "blocked"
+            trace.reply_preview = reply
+            await Tracer.finish(trace)
             return
 
         emotion, _ = classify_rule(user_message)
@@ -137,14 +160,18 @@ class AgentOrchestrator:
             session["meta"] = await self.svc.update_meta(session_id, **result.meta_updates)
         await self._finish(session_id, session, result.reply, result.action)
         await self.svc.maybe_summarize(session)
-        yield {
-            "type": "done",
-            "result": self._payload(
-                session_id, result.reply, result.sources, result.intent,
-                emotion, result.action, result.extra,
-                transferred=(need_transfer or intent == "transfer_human"),
-            ),
-        }
+        payload = self._payload(
+            session_id, result.reply, result.sources, result.intent,
+            emotion, result.action, result.extra,
+            transferred=(need_transfer or intent == "transfer_human"),
+        )
+        yield {"type": "done", "result": payload}
+        trace.intent = payload["intent"]
+        trace.emotion = payload["emotion"]
+        trace.action = payload["action"]
+        trace.transferred = payload["transferred"]
+        trace.reply_preview = payload["reply"]
+        await Tracer.finish(trace)
 
     # ---------- 工具方法 ----------
     async def _finish(self, session_id: str, session: dict, reply: str, action: str) -> None:

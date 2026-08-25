@@ -25,3 +25,4 @@ eval/reports/
 
 # Langfuse / 日志
 *.log
+data/traces/

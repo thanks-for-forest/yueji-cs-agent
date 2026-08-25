@@ -15,6 +15,18 @@ import httpx
 
 from config import settings
 
+
+def _count_llm_call() -> None:
+    """计入当前请求的 LLM 调用次数（自研可观测性用）。"""
+    try:
+        from src.utils.tracing import Tracer
+
+        t = Tracer.get()
+        if t is not None:
+            t.llm_calls += 1
+    except Exception:  # noqa: BLE001
+        pass
+
 logger = logging.getLogger(__name__)
 
 
@@ -139,6 +151,7 @@ class LLMClient:
         if resp.status_code >= 400:
             logger.warning("DeepSeek 返回 %s: %s", resp.status_code, resp.text[:500])
         resp.raise_for_status()
+        _count_llm_call()
         data = resp.json()
         return _parse_message(data["choices"][0]["message"], "deepseek")
 
@@ -159,6 +172,7 @@ class LLMClient:
             f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
         )
         resp.raise_for_status()
+        _count_llm_call()
         data = resp.json()
         return _parse_message(data["choices"][0]["message"], "ollama")
 
@@ -204,6 +218,7 @@ class LLMClient:
             logger.warning("DeepSeek 流式失败，切换 Ollama：%s", e)
         payload["model"] = settings.OLLAMA_CHAT_MODEL
         client = self._client_for_loop()
+        _count_llm_call()
         async with client.stream(
             "POST", f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
         ) as resp:

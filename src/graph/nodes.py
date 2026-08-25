@@ -13,6 +13,7 @@ from src.emotion.detector import classify_rule
 from src.rag.retriever import retrieve_context
 from src.session.service import get_session_service
 from src.utils.security import contains_sensitive, detect_prompt_injection
+from src.utils.tracing import Tracer
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,11 @@ def _payload(session_id, reply, sources, intent, emotion, action, extra, transfe
 
 # ---------------- 节点 1：安全护栏 ----------------
 async def security_check(state: dict) -> dict:
+    async with Tracer.span("security"):
+        return await _security_check_impl(state)
+
+
+async def _security_check_impl(state: dict) -> dict:
     svc = get_session_service()
     sid = state["session_id"]
     msg = state["user_message"]
@@ -67,6 +73,11 @@ async def security_check(state: dict) -> dict:
 
 # ---------------- 节点 2：情绪检测 ----------------
 async def emotion_detect(state: dict) -> dict:
+    async with Tracer.span("emotion"):
+        return await _emotion_detect_impl(state)
+
+
+async def _emotion_detect_impl(state: dict) -> dict:
     svc = get_session_service()
     sid = state["session_id"]
     emotion, _ = classify_rule(state["user_message"])
@@ -77,6 +88,11 @@ async def emotion_detect(state: dict) -> dict:
 
 # ---------------- 节点 3：意图路由（Supervisor） ----------------
 async def route_intent(state: dict) -> dict:
+    async with Tracer.span("route"):
+        return await _route_intent_impl(state)
+
+
+async def _route_intent_impl(state: dict) -> dict:
     svc = get_session_service()
     session = state["session"]
     memory = await svc.build_memory_messages(session)
@@ -115,7 +131,8 @@ async def _run_agent(state: dict, agent_name: str, trigger: str = "") -> dict:
     kw = {"intent": state.get("intent"), "emotion": state.get("emotion")}
     if trigger:
         kw["trigger"] = trigger
-    result = await agent.run(state["user_message"], session, memory, retrieved=retrieved, **kw)
+    async with Tracer.span(f"agent:{agent_name}"):
+        result = await agent.run(state["user_message"], session, memory, retrieved=retrieved, **kw)
     return {"result": result.to_dict(), "session": session}
 
 
@@ -142,6 +159,11 @@ async def human_node(state: dict) -> dict:
 
 # ---------------- 节点 4：记忆回写 + 响应组装 ----------------
 async def finalize(state: dict) -> dict:
+    async with Tracer.span("finalize"):
+        return await _finalize_impl(state)
+
+
+async def _finalize_impl(state: dict) -> dict:
     svc = get_session_service()
     sid = state["session_id"]
     session = state["session"]
