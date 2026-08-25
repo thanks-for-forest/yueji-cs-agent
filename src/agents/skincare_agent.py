@@ -146,12 +146,14 @@ class SkincareAgent(BaseAgent):
         if not tags["skin_types"] and not tags["skin_issues"]:
             tags = _fallback_tags(user_message, memory_messages)
         products = load_products()
-        top = score_products(products, tags, top_k=3)
+        # 显式品类优先：用户点名"面霜/精华/水乳/洁面"时，只在对应品类内做标签匹配
+        cat = _detect_category(user_message)
+        pool = [p for p in products if p["category"] == cat] if cat else products
+        top = score_products(pool, tags, top_k=3)
 
         # 兜底：仍无命中 → 按品类/热门推荐
         if not top:
-            cat = _detect_category(user_message)
-            candidates = [p for p in products if p["category"] == cat] if cat else products
+            candidates = pool if cat else products
             picks = sorted(candidates, key=lambda p: -p.get("monthly_sales", 0))[:3]
             top = [(p, 0.0, ["热门推荐"]) for p in picks]
 

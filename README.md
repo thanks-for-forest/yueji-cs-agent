@@ -24,7 +24,7 @@ Streamlit 前端 ⇄ FastAPI ⇄ 编排器(安全→情绪→路由→Agent) ⇄
                            记忆(窗口+摘要)      Ollama bge-m3 嵌入
 ```
 
-5 个专项 Agent：商品咨询 / 订单查询 / 售后处理 / 护肤推荐 / 人工转接，三级意图路由（规则→LLM）。
+**LangGraph StateGraph 编排（Supervisor-Worker）**：安全护栏 → 情绪检测 → 意图路由（Supervisor）→ 5 个 Worker Agent（商品咨询 / 订单查询 / 售后处理 / 护肤推荐 / 人工转接）→ 记忆回写；三级意图路由（规则→LLM）。
 
 ## 🚀 快速开始
 
@@ -46,8 +46,9 @@ streamlit run frontend/app.py                       # 前端 http://localhost:85
 ## 🧪 评测
 
 ```bash
-python -m pytest tests/ -q                  # 36 项单元测试
-python -m eval.evaluate                     # 100 条测试集双轨评测 → eval/reports/
+python -m pytest tests/ -q                  # 46 项单元测试（含 LangGraph 图测试）
+python -m eval.evaluate                     # 100 条测试集双轨评测（走 LangGraph 路径）
+python -m scripts.compare_retrieval         # 检索四策略对比 → docs/检索策略对比报告.md
 python -m scripts.stress_test --concurrency 50
 ```
 
@@ -55,11 +56,11 @@ python -m scripts.stress_test --concurrency 50
 
 | 指标 | 结果 | 目标 |
 |------|------|------|
-| 问题解决率 | **100%** (100/100) | ≥75% |
+| 问题解决率（LangGraph 路径） | **100%** (100/100) | ≥75% |
 | 幻觉率 | **0%** | ≤5% |
 | 转人工 P/R | **100% / 100%** | ≥85% / ≥90% |
 | 情绪识别 | **100%** (30/30) | ≥80% |
-| 检索 Recall@10 / MRR / NDCG@5 | **92.8% / 0.884 / 0.804** | ≥85% / 0.7 / 0.75 |
+| 检索 Recall@10 / MRR / NDCG@5 | **98.9% / 0.942 / 0.852**（dense_first 混合） | ≥85% / 0.7 / 0.75 |
 | 中位 / P95 延迟 | **2.47s / 4.82s** | <3s / <8s |
 | 流式 TTFT | **~2.0s** | <3s |
 | 并发 50 | **100% 成功，无 5xx** | - |
@@ -91,7 +92,7 @@ python -m scripts.stress_test --concurrency 50
 
 ## 📊 技术栈
 
-Python 3.14 · FastAPI · Streamlit · DeepSeek API · Ollama(bge-m3) · rank-bm25 · SQLite · pytest
+Python 3.14 · **LangGraph(Supervisor-Worker)** · FastAPI · Streamlit · DeepSeek API · Ollama(bge-m3) · rank-bm25 · SQLite · **Langfuse(可观测)** · pytest
 
 ## 📄 文档
 

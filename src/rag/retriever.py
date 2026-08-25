@@ -68,6 +68,7 @@ async def hybrid_search(query: str, top_k: int | None = None) -> list[dict]:
     emb = (await llm.embed([query]))[0]
     dense_hits = get_product_store().query(emb, top_k=settings.RETRIEVE_DENSE_TOP_K)
     dense_ids = [h["id"] for h in dense_hits]
+    dense_scores: dict[str, float] = {h["id"]: h["score"] for h in dense_hits}  # 真实余弦相似度
 
     # 2) BM25
     assert _bm25 is not None
@@ -75,21 +76,41 @@ async def hybrid_search(query: str, top_k: int | None = None) -> list[dict]:
     bm25_rank = sorted(range(len(bm25_scores)), key=lambda i: -bm25_scores[i])[: settings.RETRIEVE_BM25_TOP_K]
     bm25_ids = [chunks[i]["id"] for i in bm25_rank]
 
-    # 3) RRF 融合
-    k = settings.RETRIEVE_RRF_K
-    rrf: dict[str, float] = {}
-    for rank, cid in enumerate(dense_ids):
-        rrf[cid] = rrf.get(cid, 0.0) + 1.0 / (k + rank + 1)
-    for rank, cid in enumerate(bm25_ids):
-        rrf[cid] = rrf.get(cid, 0.0) + 1.0 / (k + rank + 1)
+    # 3) 融合（dense_first：Dense 优先 + BM25 独有兜底；rrf：经典倒数加权）
+    mode = settings.RETRIEVE_FUSION_MODE
+    if mode == "rrf":
+        k = settings.RETRIEVE_RRF_K
+        rrf: dict[str, float] = {}
+        for rank, cid in enumerate(dense_ids):
+            rrf[cid] = rrf.get(cid, 0.0) + 1.0 / (k + rank + 1)
+        for rank, cid in enumerate(bm25_ids):
+            rrf[cid] = rrf.get(cid, 0.0) + 1.0 / (k + rank + 1)
+        ranked_ids = [cid for cid, _ in sorted(rrf.items(), key=lambda kv: -kv[1])[:top_k]]
+        scores: dict[str, float] = {cid: rrf.get(cid, 0.0) for cid in ranked_ids}
+    else:  # dense_first
+        dense_rank = {cid: i for i, cid in enumerate(dense_ids)}
+        bm25_rank_map = {cid: i for i, cid in enumerate(bm25_ids)}
+        ranked_ids = list(dict.fromkeys(dense_ids + [c for c in bm25_ids if c not in dense_ids]))[:top_k]
+        # fusion_score：dense 项 1/(名次+1)（最大1.0）；BM25 独有项 0.5/(bm25名次+1)（兜底且低于任何 dense 项）
+        scores = {}
+        for cid in ranked_ids:
+            if cid in dense_rank:
+                scores[cid] = 1.0 / (dense_rank[cid] + 1)
+            else:
+                scores[cid] = 0.5 / (bm25_rank_map.get(cid, 0) + 1)
 
-    ranked = sorted(rrf.items(), key=lambda kv: -kv[1])[:top_k]
     id2chunk = {c["id"]: c for c in chunks}
     results = []
-    for cid, score in ranked:
+    for cid in ranked_ids:
         chunk = id2chunk.get(cid)
         if chunk:
-            results.append({"id": cid, "fusion_score": score, "text": chunk["text"], "meta": chunk["meta"]})
+            results.append({
+                "id": cid,
+                "fusion_score": scores.get(cid, 0.0),
+                "dense_score": dense_scores.get(cid, 0.0),
+                "text": chunk["text"],
+                "meta": chunk["meta"],
+            })
     return results
 
 
@@ -98,9 +119,11 @@ async def retrieve_context(
     top_k: int | None = None,
     min_score: float | None = None,
 ) -> list[dict]:
-    """面向 Agent 的检索入口：混合检索 + 可选 LLM 重排 + 阈值过滤。
+    """面向 Agent 的检索入口：混合检索 + 可选 LLM 重排 + 双重阈值过滤。
 
-    返回：按相关性排序的块列表（含 text/meta/fusion_score）。
+    过滤门槛（模式无关）：
+    1. 余弦相似度门槛：Top 结果的真实 bge-m3 相似度 < DENSE_MIN_SIMILARITY → 无可信答案（拒答/澄清）；
+    2. 融合分门槛：兼容 rrf 模式的低分过滤。
     """
     results = await hybrid_search(query, top_k=top_k or settings.RETRIEVE_RERANK_TOP_K)
     min_score = min_score if min_score is not None else settings.RETRIEVE_MIN_SCORE
@@ -108,9 +131,13 @@ async def retrieve_context(
     if settings.RERANK_ENABLED and results:
         results = await _llm_rerank(query, results)
 
-    # 阈值过滤：融合分低于阈值的视为"无可信答案"
     if not results:
         return []
+    # 门槛1：真实余弦相似度（防无关查询混入）
+    top_sim = max(r.get("dense_score", 0.0) for r in results)
+    if top_sim < settings.DENSE_MIN_SIMILARITY:
+        return []
+    # 门槛2：融合分
     results = [r for r in results if r.get("fusion_score", 0) >= min_score]
     return results
 

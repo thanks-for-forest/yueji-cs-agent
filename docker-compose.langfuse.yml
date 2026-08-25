@@ -1,0 +1,76 @@
+# Langfuse 自托管（可观测性演示用）
+# 启动：docker compose -f docker-compose.langfuse.yml up -d
+# 访问：http://localhost:3000 （管理员账号见下方 INIT_USER_*）
+version: "3.8"
+
+services:
+  langfuse-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: langfuse
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - langfuse-minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  langfuse-web:
+    image: langfuse/langfuse:2
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+      langfuse-redis:
+        condition: service_healthy
+      langfuse-minio:
+        condition: service_healthy
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@langfuse-db:5432/langfuse
+      DIRECT_URL: postgresql://postgres:postgres@langfuse-db:5432/langfuse
+      REDIS_URL: redis://langfuse-redis:6379
+      S3_ENDPOINT: http://langfuse-minio:9000
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_BUCKET_NAME: langfuse
+      S3_REGION: us-east-1
+      S3_FORCE_PATH_STYLE: "true"
+      ENCRYPTION_KEY: 0be63bceb0caed51eeac4a06af7beb2bbca6a7c33f2ad0a479e02fe0307ff0d7
+      SALT: e81eb6c8fa1915328a2667cda1bf6c47
+      NEXTAUTH_URL: http://localhost:3001
+      NEXTAUTH_SECRET: 0be63bceb0caed51eeac4a06af7beb2bbca6a7c33f2ad0a479e02fe0307ff0d7
+      LANGFUSE_INIT_USER_EMAIL: admin@yueji.local
+      LANGFUSE_INIT_USER_PASSWORD: admin123456
+      LANGFUSE_INIT_PROJECT_NAME: yueji-cs
+      TELEMETRY_ENABLED: "false"
+    restart: unless-stopped
+
+volumes:
+  langfuse-db-data:
+  langfuse-minio-data:

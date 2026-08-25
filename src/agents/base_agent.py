@@ -32,6 +32,7 @@ class AgentResult:
             "intent": self.intent,
             "action": self.action,
             "extra": self.extra,
+            "meta_updates": self.meta_updates,
         }
 
 

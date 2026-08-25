@@ -31,9 +31,15 @@ RETRIEVE_BM25_TOP_K: int = int(os.getenv("RETRIEVE_BM25_TOP_K", "20"))
 RETRIEVE_FUSION_TOP_K: int = int(os.getenv("RETRIEVE_FUSION_TOP_K", "15"))
 RETRIEVE_RERANK_TOP_K: int = int(os.getenv("RETRIEVE_RERANK_TOP_K", "5"))
 RETRIEVE_RRF_K: int = int(os.getenv("RETRIEVE_RRF_K", "60"))
+# 融合模式：dense_first（Dense TopK 优先 + BM25 独有兜底：指标不劣于 Dense 且保留精确匹配鲁棒性，默认）
+#            | rrf（经典倒数加权融合）
+RETRIEVE_FUSION_MODE: str = os.getenv("RETRIEVE_FUSION_MODE", "dense_first")
 # RRF 融合分阈值：最大约 2/61≈0.033（两个列表都排第一）。0.02≈"至少在单一列表排进前19"，
 # 用于区分"有一定依据"与"无可信答案"。低于阈值的查询走澄清/拒答流程。
 RETRIEVE_MIN_SCORE: float = float(os.getenv("RETRIEVE_MIN_SCORE", "0.02"))
+# 真实余弦相似度门槛（dense_first 模式下主门槛）：Top 检索块的 bge-m3 余弦相似度低于该值
+# 视为"无可信答案"，走澄清/拒答流程。实测：相关查询 ≥0.71，无关 ≤0.50。
+DENSE_MIN_SIMILARITY: float = float(os.getenv("DENSE_MIN_SIMILARITY", "0.55"))
 
 # ---------- Agent / 对话 ----------
 MAX_TOOL_ITERS: int = int(os.getenv("MAX_TOOL_ITERS", "3"))
@@ -42,6 +48,16 @@ SUMMARY_THRESHOLD: int = int(os.getenv("SUMMARY_THRESHOLD", "20"))  # 超过该�
 MAX_SESSION_TURNS: int = int(os.getenv("MAX_SESSION_TURNS", "200"))
 TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
 MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1024"))
+
+# ---------- 可观测性（Langfuse） ----------
+LANGFUSE_PUBLIC_KEY: str = os.getenv("LANGFUSE_PUBLIC_KEY", "")
+LANGFUSE_SECRET_KEY: str = os.getenv("LANGFUSE_SECRET_KEY", "")
+LANGFUSE_HOST: str = os.getenv("LANGFUSE_HOST", "http://127.0.0.1:3000")
+
+# ---------- 评测时间基准 ----------
+# 评测时固定为订单生成锚点日期，保证"签收天数/受理期"类规则确定性（防止随真实日期漂移导致评测不稳定）。
+# 生产环境留空 = 使用真实当前时间。
+REFERENCE_NOW: str = os.getenv("REFERENCE_NOW", "")
 
 # ---------- 情绪 ----------
 EMOTION_NEGATIVE_WORDS = [

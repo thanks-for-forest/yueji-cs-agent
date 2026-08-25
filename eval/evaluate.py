@@ -309,6 +309,9 @@ def render_markdown(report: dict) -> str:
 
 
 def main() -> None:
+    # 固定评测时间基准（与 gen_orders 锚点一致），防止日期漂移影响结果
+    if not settings.REFERENCE_NOW:
+        settings.REFERENCE_NOW = "2026-08-24T12:00:00"
     parser = argparse.ArgumentParser()
     parser.add_argument("--quick", type=int, default=None, help="只跑前 N 条")
     args = parser.parse_args()

@@ -1,6 +1,8 @@
 # LLM / Agent
 langchain>=1.0,<2
 langchain-openai>=1.0
+langgraph>=1.0
+langfuse>=4.0
 
 # Web
 fastapi>=0.140

@@ -23,8 +23,20 @@ VALID_TYPES = list(RULES.keys())
 
 
 def days_since(date_str: str, now: datetime | None = None) -> int:
-    """计算从 date_str 到今天的天数（向下取整，最少0）。"""
-    now = now or datetime.now()
+    """计算从 date_str 到参考时间的天数（向下取整，最少0）。
+
+    评测时可用 settings.REFERENCE_NOW 固定基准，避免结果随真实日期漂移。
+    """
+    if now is None:
+        from config import settings
+
+        if settings.REFERENCE_NOW:
+            try:
+                now = datetime.fromisoformat(settings.REFERENCE_NOW)
+            except ValueError:
+                now = datetime.now()
+        else:
+            now = datetime.now()
     try:
         dt = datetime.fromisoformat(date_str)
     except ValueError:

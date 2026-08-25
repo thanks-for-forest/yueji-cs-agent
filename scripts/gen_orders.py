@@ -16,6 +16,9 @@ from src.session.db import close_db, get_conn
 
 random.seed(2026)
 
+# 订单日期锚点：与评测基准 REFERENCE_NOW 一致（默认 2026-08-24），保证评测确定性
+ANCHOR = datetime(2026, 8, 24, 12, 0)
+
 PHONES = ["13800001234", "13911112222", "15022223333", "13633334444", "18844445555",
           "15555556666", "13766667777", "18677778888", "13388889999", "15999990000"]
 
@@ -42,7 +45,7 @@ def _tracking(rng: random.Random, status: str, created: datetime) -> dict | None
 def build_orders() -> list[dict]:
     products = json.loads((settings.RAW_DATA_DIR / "products.json").read_text(encoding="utf-8"))
     rng = random.Random(2026)
-    now = datetime.now()
+    now = ANCHOR
     statuses = ["待付款"] * 2 + ["待发货"] * 3 + ["已发货"] * 4 + ["已完成"] * 6 + ["已取消"] * 2 + ["退款中"] * 3
     rng.shuffle(statuses)
     orders = []

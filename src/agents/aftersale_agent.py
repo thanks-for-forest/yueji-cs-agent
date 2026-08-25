@@ -78,7 +78,7 @@ class AftersaleAgent(BaseAgent):
         if context:
             messages.append({"role": "system", "content": f"<知识片段>\n{context}\n</知识片段>"})
         messages.append({"role": "user", "content": user_message})
-        out = await self._llm_loop(messages, ctx={"user_id": session.get("user_id", "") or ""})
+        out = await self._llm_loop(messages)  # 政策问答模式无工具调用，无需 ctx
         reply = out["content"].strip()
         sources = parse_sources(reply)
         if not sources and retrieved:
