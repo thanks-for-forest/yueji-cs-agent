@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="940" viewBox="0 0 1280 940">
+<rect width="1280" height="940" fill="#0b1020"/>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#64ffda"/></marker><marker id="d" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#8892b0"/></marker></defs>
+<line x1="420" y1="94" x2="420" y2="166" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<line x1="490" y1="242" x2="490" y2="316" stroke="#c084fc" stroke-width="2" marker-end="url(#a)"/>
+<line x1="490" y1="262" x2="165" y2="316" stroke="#7c9cff" stroke-width="1.5" marker-end="url(#a)" stroke-dasharray="0"/>
+<line x1="490" y1="262" x2="395" y2="316" stroke="#7c9cff" stroke-width="1.5" marker-end="url(#a)" stroke-dasharray="0"/>
+<line x1="490" y1="262" x2="625" y2="316" stroke="#7c9cff" stroke-width="1.5" marker-end="url(#a)" stroke-dasharray="0"/>
+<line x1="490" y1="262" x2="855" y2="316" stroke="#7c9cff" stroke-width="1.5" marker-end="url(#a)" stroke-dasharray="0"/>
+<line x1="490" y1="262" x2="1085" y2="316" stroke="#7c9cff" stroke-width="1.5" marker-end="url(#a)" stroke-dasharray="0"/>
+<rect x="60" y="30" width="180" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="60" y="30" width="180" height="4" rx="2" fill="#64ffda" opacity="0.9"/>
+<text x="150.0" y="68.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">👤 用户</text>
+<rect x="300" y="30" width="240" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="300" y="30" width="240" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="420.0" y="58.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Streamlit 前端</text>
+<text x="420.0" y="82.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">聊天界面·流式渲染</text>
+<rect x="600" y="30" width="240" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="600" y="30" width="240" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="720.0" y="58.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">FastAPI 网关</text>
+<text x="720.0" y="82.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">会话管理·限流鉴权</text>
+<rect x="300" y="170" width="380" height="72" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="300" y="170" width="380" height="4" rx="2" fill="#c084fc" opacity="0.9"/>
+<text x="490.0" y="202.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">意图路由 + 情绪检测</text>
+<text x="490.0" y="226.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">规则→LLM 三级兜底·情绪转人工</text>
+<rect x="760" y="170" width="300" height="72" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="760" y="170" width="300" height="4" rx="2" fill="#64ffda" opacity="0.9"/>
+<text x="910.0" y="202.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">自研追踪器</text>
+<text x="910.0" y="226.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">节点耗时·LLM计数 (Langfuse可选)</text>
+<rect x="60" y="320" width="210" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="60" y="320" width="210" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="165.0" y="358.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">🛍️ 商品咨询</text>
+<rect x="290" y="320" width="210" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="290" y="320" width="210" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="395.0" y="358.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">📦 订单查询</text>
+<rect x="520" y="320" width="210" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="520" y="320" width="210" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="625.0" y="358.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">🔄 售后处理</text>
+<rect x="750" y="320" width="210" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="750" y="320" width="210" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="855.0" y="358.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">💆 护肤推荐</text>
+<rect x="980" y="320" width="210" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="980" y="320" width="210" height="4" rx="2" fill="#7c9cff" opacity="0.9"/>
+<text x="1085.0" y="358.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">🤝 人工转接</text>
+<rect x="60" y="460" width="360" height="72" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="60" y="460" width="360" height="4" rx="2" fill="#64ffda" opacity="0.9"/>
+<text x="240.0" y="492.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">混合检索</text>
+<text x="240.0" y="516.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Dense + BM25 · dense_first 融合</text>
+<rect x="460" y="460" width="360" height="72" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="460" y="460" width="360" height="4" rx="2" fill="#64ffda" opacity="0.9"/>
+<text x="640.0" y="492.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">工具集</text>
+<text x="640.0" y="516.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">查订单·售后规则·产品查询</text>
+<rect x="860" y="460" width="360" height="72" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="860" y="460" width="360" height="4" rx="2" fill="#64ffda" opacity="0.9"/>
+<text x="1040.0" y="492.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">规则引擎</text>
+<text x="1040.0" y="516.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">退换货条件判断</text>
+<rect x="60" y="610" width="360" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="60" y="610" width="360" height="4" rx="2" fill="#8892b0" opacity="0.9"/>
+<text x="240.0" y="638.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">产品 / FAQ 向量库</text>
+<text x="240.0" y="662.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Chroma 接口兼容</text>
+<rect x="460" y="610" width="360" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="460" y="610" width="360" height="4" rx="2" fill="#8892b0" opacity="0.9"/>
+<text x="640.0" y="638.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">SQLite 订单库</text>
+<text x="640.0" y="662.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">订单·会话·工单</text>
+<rect x="860" y="610" width="360" height="64" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="860" y="610" width="360" height="4" rx="2" fill="#8892b0" opacity="0.9"/>
+<text x="1040.0" y="638.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">售后政策库</text>
+<text x="1040.0" y="662.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">规则条款</text>
+<rect x="300" y="780" width="520" height="90" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="300" y="780" width="520" height="4" rx="2" fill="#c084fc" opacity="0.9"/>
+<text x="560.0" y="821.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">DeepSeek 大模型</text>
+<text x="560.0" y="845.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">意图理解 · 工具调用 · 生成回复 · 128K</text>
+<rect x="880" y="790" width="340" height="70" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="880" y="790" width="340" height="4" rx="2" fill="#8892b0" opacity="0.9"/>
+<text x="1050.0" y="821.0" text-anchor="middle" font-size="20" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Ollama · bge-m3</text>
+<text x="1050.0" y="845.0" text-anchor="middle" font-size="13" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">本地嵌入 1024 维</text>
+<line x1="560" y1="674" x2="560" y2="776" stroke="#8892b0" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#d)"/>
+<line x1="165" y1="388" x2="165" y2="776" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#d)"/>
+<line x1="395" y1="388" x2="395" y2="776" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#d)"/>
+<line x1="625" y1="388" x2="625" y2="776" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#d)"/>
+<line x1="855" y1="388" x2="855" y2="776" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#d)"/>
+<line x1="1085" y1="388" x2="1085" y2="776" stroke="#c084fc" stroke-width="1.2" stroke-dasharray="5,4" marker-end="url(#d)"/>
+</svg>

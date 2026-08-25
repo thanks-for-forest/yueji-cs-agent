@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520">
+<rect width="1280" height="520" fill="#0b1020"/>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#64ffda"/></marker><marker id="r" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#ff6b6b"/></marker></defs>
+<text x="640.0" y="40" text-anchor="middle" font-size="22" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">智能客服对话全流程</text>
+<rect x="13" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="13" y="90" width="150" height="4" rx="2" fill="#64ffda"/>
+<text x="88.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">用户提问</text>
+<text x="88.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">这款面霜适合敏感肌吗？</text>
+<line x1="163" y1="138.0" x2="197" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="197" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="197" y="90" width="150" height="4" rx="2" fill="#64ffda"/>
+<text x="272.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">安全检测</text>
+<text x="272.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">注入检测√ 敏感词√</text>
+<line x1="347" y1="138.0" x2="381" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="381" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="381" y="90" width="150" height="4" rx="2" fill="#64ffda"/>
+<text x="456.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">情绪识别</text>
+<text x="456.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">正常 / 不满 / 愤怒</text>
+<line x1="531" y1="138.0" x2="565" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="565" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="565" y="90" width="150" height="4" rx="2" fill="#7c9cff"/>
+<text x="640.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">意图路由</text>
+<text x="640.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">商品咨询 订单 售后 推荐</text>
+<line x1="715" y1="138.0" x2="749" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="749" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="749" y="90" width="150" height="4" rx="2" fill="#7c9cff"/>
+<text x="824.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">知识检索</text>
+<text x="824.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Dense+BM25 Top5</text>
+<line x1="899" y1="138.0" x2="933" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="933" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="933" y="90" width="150" height="4" rx="2" fill="#c084fc"/>
+<text x="1008.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">Agent 生成</text>
+<text x="1008.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">回复 + 〔来源〕引用</text>
+<line x1="1083" y1="138.0" x2="1117" y2="138.0" stroke="#64ffda" stroke-width="2" marker-end="url(#a)"/>
+<rect x="1117" y="90" width="150" height="96" rx="12" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)"/>
+<rect x="1117" y="90" width="150" height="4" rx="2" fill="#64ffda"/>
+<text x="1192.0" y="130" text-anchor="middle" font-size="17" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">回复用户</text>
+<text x="1192.0" y="158" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">带来源标签的答案</text>
+<line x1="456.0" y1="186" x2="456.0" y2="300" stroke="#ff6b6b" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#r)"/>
+<rect x="341" y="310" width="300" height="110" rx="12" fill="rgba(255,255,255,0.05)" stroke="#ff6b6b" stroke-dasharray="6,4"/>
+<text x="491" y="345" text-anchor="middle" font-size="16" fill="#ff6b6b" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">情绪 ≥ 阈值（连续负面 / 愤怒）</text>
+<text x="491" y="375" text-anchor="middle" font-size="13" fill="#e8ecf5" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">自动转人工 · 生成对话摘要工单</text>
+<text x="491" y="402" text-anchor="middle" font-size="11" fill="#8892b0" font-family="Microsoft YaHei,'Noto Sans CJK SC',sans-serif">人工客服 1-3 分钟内接入</text>
+</svg>
