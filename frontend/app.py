@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import re as _re
 import urllib.parse
 
 import httpx
@@ -18,6 +19,8 @@ st.set_page_config(page_title="悦己美妆智能客服", page_icon="💄", layo
 
 EMOJI = {"normal": "🙂", "negative": "😟", "angry": "😡"}
 
+_SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+)", _re.I)
+
 
 def render_sources(sources: list[dict]) -> None:
     """把〔来源〕渲染为可点击链接：点击在新窗口打开知识库原文。"""
@@ -25,12 +28,15 @@ def render_sources(sources: list[dict]) -> None:
         return
     links = []
     for s in sources[:5]:
-        label = s.get("name") or s.get("source_id") or ""
-        href = f"{API}/api/source/{urllib.parse.quote(label)}"
+        name = s.get("name") or s.get("source_id") or ""
+        sid = s.get("source_id") or ""
+        # 链接优先用干净的 ID（P011/F020/POL-1），兜底用完整标签（后端支持按名称解析）
+        link = sid if _SRC_ID_RE.search(sid) else name
+        href = f"{API}/api/source/{urllib.parse.quote(link)}"
         links.append(
             f'<a href="{href}" target="_blank" rel="noopener" '
             f'style="color:#64ffda;text-decoration:none;border-bottom:1px dashed #64ffda;">'
-            f'📄 {label[:24]}</a>'
+            f'📄 {name[:24]}</a>'
         )
     st.markdown("📎 来源：" + " &nbsp;·&nbsp; ".join(links), unsafe_allow_html=True)
 

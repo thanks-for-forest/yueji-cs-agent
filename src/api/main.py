@@ -142,14 +142,29 @@ def _chunks() -> list[dict]:
 
 
 def _resolve_sources(label: str) -> list[dict]:
-    """把来源标签（如 '烟酰胺焕亮精华液(P011)' 或 'P011'）解析为检索块。"""
-    m = _SRC_ID_RE.search(label or "")
-    sid = m.group(1).upper() if m else (label or "").strip().upper()
-    if not sid:
+    """把来源标签解析为检索块。
+
+    支持三种形态：① 带编号标签 "烟酰胺焕亮精华液(P011)"；② 纯编号 "P011/F020/POL-1"；
+    ③ 纯名称 "烟酰胺焕亮精华液"（按产品名/FAQ问题/政策类型名匹配）。
+    """
+    chunks = _chunks()
+    if not chunks:
         return []
-    hits = [c for c in _chunks() if c["meta"].get("source", "").upper() == sid]
+    label = (label or "").strip()
+    m = _SRC_ID_RE.search(label)
+    if m:
+        sid = m.group(1).upper()
+        hits = [c for c in chunks if c["meta"].get("source", "").upper() == sid]
+        if hits:
+            return hits
+        hits = [c for c in chunks if sid in c["id"].upper()]
+        if hits:
+            return hits
+    # 按名称匹配（产品名 / FAQ 问题 / 政策类型名）
+    name = label.upper()
+    hits = [c for c in chunks if name and c["meta"].get("name", "").upper() == name]
     if not hits:
-        hits = [c for c in _chunks() if sid in c["id"].upper()]
+        hits = [c for c in chunks if name and name in c["meta"].get("name", "").upper()]
     return hits
 
 
