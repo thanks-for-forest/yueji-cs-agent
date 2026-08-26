@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 
 from config import settings
 from src.agents.orchestrator import get_orchestrator
+from src.auth import service as auth_service
 from src.llm.client import close_llm
 from src.session.db import close_db, init_db
 from src.session.service import get_session_service
@@ -24,6 +25,7 @@ logger = logging.getLogger("api")
 async def lifespan(app: FastAPI):
     settings.ensure_dirs()
     await init_db()
+    await auth_service.seed_demo_users()
     logger.info("DB 就绪: %s", settings.DB_PATH)
     yield
     await close_db()
@@ -57,20 +59,24 @@ def _check_ownership(session: dict | None, user_id: str) -> None:
 
 # ---------------- 会话 ----------------
 @app.post("/api/session")
-async def create_session(req: CreateSessionReq | None = None):
-    """创建会话（绑定 user_id，用于多用户区分与订单隔离）。body 可缺省。"""
+async def create_session(req: CreateSessionReq | None = None, x_auth_token: str = Header(default="")):
+    """创建会话：登录用户自动绑定账号，否则用请求体 user_id（可缺省=游客）。"""
     svc = get_session_service()
-    session = await svc.create_session(user_id=req.user_id if req else "")
+    user = await auth_service.get_user_by_token(x_auth_token)
+    uid = (user or {}).get("user_id") or (req.user_id if req else "") or "guest"
+    session = await svc.create_session(user_id=uid)
     return {"session_id": session["session_id"], "user_id": session.get("user_id", ""), "created_at": session["created_at"]}
 
 
 @app.get("/api/session/{session_id}/history")
-async def session_history(session_id: str, user_id: str = ""):
+async def session_history(session_id: str, user_id: str = "", x_auth_token: str = Header(default="")):
     svc = get_session_service()
     session = await svc.get_session(session_id)
     if session is None:
         raise HTTPException(status_code=404, detail="会话不存在")
-    _check_ownership(session, user_id)
+    user = await auth_service.get_user_by_token(x_auth_token)
+    eff_user = (user or {}).get("user_id") or user_id
+    _check_ownership(session, eff_user)
     msgs = await svc.get_messages(session_id)
     return {
         "session_id": session_id,
@@ -93,14 +99,18 @@ async def list_sessions(limit: int = 20, user_id: str = ""):
 
 # ---------------- 聊天 ----------------
 @app.post("/api/chat")
-async def chat(req: ChatReq):
+async def chat(req: ChatReq, x_auth_token: str = Header(default="")):
     from src.api.deps import check_rate_limit
 
     check_rate_limit(req.session_id, settings.RATE_LIMIT_PER_MIN)
     orchestrator = get_orchestrator()
-    _check_ownership(await get_session_service().get_session(req.session_id), req.user_id)
+    # 用户身份：登录 token 优先，其次请求体 user_id，兜底游客
+    user = await auth_service.get_user_by_token(x_auth_token)
+    sid_user = (user or {}).get("user_id") or req.user_id or "guest"
+    _check_ownership(await get_session_service().get_session(req.session_id), sid_user)
     try:
         result = await orchestrator.handle(req.session_id, req.message)
+        result["user_id"] = sid_user
     except Exception as e:  # noqa: BLE001
         logger.exception("聊天处理异常")
         raise HTTPException(status_code=500, detail=f"服务内部错误: {e}")
@@ -108,7 +118,7 @@ async def chat(req: ChatReq):
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(req: ChatReq):
+async def chat_stream(req: ChatReq, x_auth_token: str = Header(default="")):
     """SSE 流式对话：data: {"type":"delta","text":"..."} ... data: {"type":"done","result":{...}}"""
     import json as _json
 
@@ -117,7 +127,9 @@ async def chat_stream(req: ChatReq):
     from src.api.deps import check_rate_limit
 
     check_rate_limit(req.session_id, settings.RATE_LIMIT_PER_MIN)
-    _check_ownership(await get_session_service().get_session(req.session_id), req.user_id)
+    user = await auth_service.get_user_by_token(x_auth_token)
+    sid_user = (user or {}).get("user_id") or req.user_id or "guest"
+    _check_ownership(await get_session_service().get_session(req.session_id), sid_user)
     orchestrator = get_orchestrator()
 
     async def gen():
@@ -130,6 +142,52 @@ async def chat_stream(req: ChatReq):
         yield "data: [DONE]\n\n"
 
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+
+# ---------------- 用户认证（登录/注册/token） ----------------
+class RegisterReq(BaseModel):
+    username: str = Field(min_length=2, max_length=32)
+    password: str = Field(min_length=6, max_length=64)
+
+
+class LoginReq(BaseModel):
+    username: str = Field(min_length=2, max_length=32)
+    password: str = Field(min_length=1, max_length=64)
+
+
+async def current_user(x_auth_token: str = Header(default="")) -> Optional[dict]:
+    """从 X-Auth-Token 解析当前用户；未登录返回 None（游客）。"""
+    return await auth_service.get_user_by_token(x_auth_token)
+
+
+@app.post("/api/auth/register")
+async def auth_register(req: RegisterReq):
+    try:
+        return {"ok": True, **await auth_service.register(req.username, req.password)}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/auth/login")
+async def auth_login(req: LoginReq):
+    result = await auth_service.login(req.username, req.password)
+    if result is None:
+        raise HTTPException(status_code=401, detail="用户名或密码错误")
+    return result
+
+
+@app.post("/api/auth/logout")
+async def auth_logout(x_auth_token: str = Header(default="")):
+    if x_auth_token:
+        await auth_service.logout(x_auth_token)
+    return {"ok": True}
+
+
+@app.get("/api/auth/me")
+async def auth_me(user: Optional[dict] = Depends(current_user)):
+    if user is None:
+        raise HTTPException(status_code=401, detail="未登录")
+    return user
 
 
 # ---------------- 知识库管理（KB 上传/审核/回滚，需管理员令牌） ----------------

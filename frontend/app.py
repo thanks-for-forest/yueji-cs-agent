@@ -1,10 +1,11 @@
-"""「悦己 YUEJI 美妆」智能客服前端（Streamlit）。
+"""「悦己 YUEJI 美妆」智能客服前端（Streamlit）—— 四视图架构。
 
-启动：streamlit run frontend/app.py
-依赖后端：uvicorn src.api.main:app
+视图：🏠 门户（游客AI客服）｜ 👤 登录/注册 → 用户专属AI客服 ｜ 🔐 管理员 → 知识库管理
+启动：streamlit run frontend/app.py（依赖后端 uvicorn :8000）
 """
 from __future__ import annotations
 
+import json as _json
 import re as _re
 import urllib.parse
 
@@ -18,8 +19,7 @@ API = settings.API_BASE_URL
 st.set_page_config(page_title="悦己美妆智能客服", page_icon="💄", layout="wide")
 
 EMOJI = {"normal": "🙂", "negative": "😟", "angry": "😡"}
-
-_SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+)", _re.I)
+_SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+|KB-\d+)", _re.I)
 
 
 def render_sources(sources: list[dict]) -> None:
@@ -30,7 +30,6 @@ def render_sources(sources: list[dict]) -> None:
     for s in sources[:5]:
         name = s.get("name") or s.get("source_id") or ""
         sid = s.get("source_id") or ""
-        # 链接优先用干净的 ID（P011/F020/POL-1），兜底用完整标签（后端支持按名称解析）
         link = sid if _SRC_ID_RE.search(sid) else name
         href = f"{API}/api/source/{urllib.parse.quote(link)}"
         links.append(
@@ -41,45 +40,168 @@ def render_sources(sources: list[dict]) -> None:
     st.markdown("📎 来源：" + " &nbsp;·&nbsp; ".join(links), unsafe_allow_html=True)
 
 
-def new_session() -> None:
+# ---------------- 会话管理（按用户隔离） ----------------
+def _new_session(user_id: str, auth_token: str = "") -> None:
     try:
-        uid = st.session_state.get("user_id", "") or ""
-        resp = httpx.post(f"{API}/api/session", json={"user_id": uid}, timeout=10)
+        headers = {"X-Auth-Token": auth_token} if auth_token else {}
+        resp = httpx.post(f"{API}/api/session", json={"user_id": user_id}, headers=headers, timeout=10)
         resp.raise_for_status()
         data = resp.json()
-        st.session_state.session_id = data["session_id"]
-        st.session_state.messages = []
-        st.session_state.meta = {}
+        st.session_state[f"session_id_{user_id}"] = data["session_id"]
+        st.session_state[f"messages_{user_id}"] = []
+        st.session_state[f"meta_{user_id}"] = {}
     except Exception as e:  # noqa: BLE001
-        st.error(
-            f"⚠️ 无法连接后端服务（{API}）：{e}\n\n"
-            "请先启动 API：`python -m uvicorn src.api.main:app --port 8000`"
-        )
+        st.error(f"⚠️ 无法连接后端服务（{API}）：{e}\n\n请先启动 API：`python -m uvicorn src.api.main:app --port 8000`")
         st.stop()
 
 
-if "user_id" not in st.session_state:
-    st.session_state.user_id = "U001"  # 演示用户（订单数据 U001-U010）
-if "admin_ok" not in st.session_state:
-    st.session_state.admin_ok = False
-if "admin_token" not in st.session_state:
-    st.session_state.admin_token = ""
+def _chat_headers(auth_token: str = "") -> dict:
+    return {"X-Auth-Token": auth_token} if auth_token else {}
 
 
+# ---------------- 客服对话视图（门户游客 / 登录用户共用） ----------------
+def _render_chat(user_id: str, auth_token: str = "", title: str = "💬 小悦 · 悦己美妆客服") -> None:
+    sid_key = f"session_id_{user_id}"
+    msg_key = f"messages_{user_id}"
+    meta_key = f"meta_{user_id}"
+    if sid_key not in st.session_state:
+        _new_session(user_id, auth_token)
+
+    st.title(title)
+    st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
+
+    meta = st.session_state.get(meta_key, {})
+    cols = st.columns(4)
+    cols[0].metric("会话状态", meta.get("emotion", "normal"), delta=None)
+    cols[1].metric("当前意图", meta.get("intent", "-"))
+    cols[2].metric("转人工", "✅ 已转接" if meta.get("transferred") else "-")
+    cols[3].metric("工单", meta.get("ticket", "-"))
+
+    for msg in st.session_state.get(msg_key, []):
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+            m = msg.get("meta", {})
+            render_sources(m.get("sources"))
+            if m.get("action") == "order_queried" and m.get("extra", {}).get("tool_call"):
+                _render_order_card(m["extra"]["tool_call"])
+            if m.get("action") == "ticket_created":
+                st.success(f"✅ 售后工单已生成：{m.get('extra', {}).get('ticket', '')}")
+            if m.get("action") == "transfer":
+                st.warning(f"🔄 已转接人工，工单号：{m.get('extra', {}).get('ticket_id', '')}")
+            if m.get("intent") == "skincare_recommend" and m.get("extra", {}).get("recommendations"):
+                _render_recommendations(m["extra"])
+
+    if prompt := st.chat_input("请输入您的问题…"):
+        msgs = st.session_state.setdefault(msg_key, [])
+        msgs.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        with st.chat_message("assistant"):
+            placeholder = st.empty()
+            full_text = ""
+            data = {}
+            try:
+                with httpx.stream(
+                    "POST",
+                    f"{API}/api/chat/stream",
+                    json={"session_id": st.session_state[sid_key], "message": prompt, "user_id": user_id},
+                    headers=_chat_headers(auth_token),
+                    timeout=120,
+                ) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        if not line or not line.startswith("data:"):
+                            continue
+                        payload = line[5:].strip()
+                        if payload == "[DONE]":
+                            break
+                        try:
+                            ev = _json.loads(payload)
+                        except Exception:  # noqa: BLE001
+                            continue
+                        if ev.get("type") == "delta":
+                            full_text += ev["text"]
+                            placeholder.markdown(full_text + "▌")
+                        elif ev.get("type") == "done":
+                            data = ev.get("result", {})
+            except Exception as e:  # noqa: BLE001
+                placeholder.error(f"服务异常：{e}")
+                msgs.pop()
+                st.stop()
+
+            placeholder.markdown(full_text)
+            render_sources(data.get("sources"))
+            if data.get("action") == "order_queried" and data.get("extra", {}).get("tool_call"):
+                _render_order_card(data["extra"]["tool_call"])
+            if data.get("action") == "ticket_created":
+                st.success(f"✅ 售后工单已生成：{data.get('extra', {}).get('ticket', '')}")
+            if data.get("action") == "transfer":
+                st.warning(f"🔄 已转接人工，工单号：{data.get('extra', {}).get('ticket_id', '')}")
+            if data.get("intent") == "skincare_recommend" and data.get("extra", {}).get("recommendations"):
+                _render_recommendations(data["extra"])
+
+            msgs.append({"role": "assistant", "content": full_text, "meta": data})
+            st.session_state[meta_key] = {
+                "emotion": f"{EMOJI.get(data.get('emotion', 'normal'), '')} {data.get('emotion', 'normal')}",
+                "intent": data.get("intent", "-"),
+                "transferred": data.get("transferred", False),
+                "ticket": data.get("extra", {}).get("ticket") or data.get("extra", {}).get("ticket_id", "-"),
+            }
+            st.rerun()
+
+
+def _render_order_card(tool_call: dict) -> None:
+    """根据工具调用参数重新查询订单并渲染卡片。"""
+    args = tool_call.get("arguments", {})
+    oid = args.get("order_id", "")
+    tail = args.get("phone_tail", "")
+    if not oid:
+        return
+    try:
+        resp = httpx.get(f"{API}/api/order/{oid}", params={"phone_tail": tail}, timeout=10)
+        if resp.status_code != 200:
+            return
+        order = resp.json()
+        with st.container(border=True):
+            st.markdown(f"📦 **{order['order_id']}** · {order['status']}")
+            for it in order.get("items", []):
+                st.markdown(f"- {it['name']} ×{it['qty']}  ¥{it['price']}")
+            st.markdown(f"**合计：¥{order['total_amount']}**")
+            if order.get("latest_event"):
+                st.caption(f"🚚 最新物流：{order['latest_event']['desc']}（{order['latest_event']['time']}）")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _render_recommendations(extra: dict) -> None:
+    recs = extra.get("recommendations", [])
+    if not recs:
+        return
+    st.markdown("#### ✨ 为你推荐")
+    cols = st.columns(len(recs))
+    for col, rec in zip(cols, recs):
+        with col:
+            with st.container(border=True):
+                st.markdown(f"**{rec['name']}**")
+                st.markdown(f"¥{rec['price']} · {rec.get('category', '')}")
+                st.caption(" / ".join(rec.get("efficacy", [])[:2]))
+                st.caption("✓ " + "；".join(rec.get("reasons", [])[:2]))
+    if extra.get("routine"):
+        st.markdown("**搭配建议**：")
+        st.markdown(" → ".join(f"{r['name']}（¥{r['price']}）" for r in extra["routine"]))
+
+
+# ---------------- 知识库管理（管理员视图） ----------------
 def _admin_headers() -> dict:
-    """KB 管理请求的管理员头（令牌 + 操作人）。"""
-    return {"X-Admin-Token": st.session_state.admin_token,
-            "X-Admin-Name": st.session_state.get("user_id", "admin") or "admin"}
+    return {"X-Admin-Token": st.session_state.get("admin_token", ""),
+            "X-Admin-Name": st.session_state.get("admin_name", "admin") or "admin"}
 
-if "session_id" not in st.session_state or "messages" not in st.session_state:
-    new_session()
 
 def _render_kb_page() -> None:
-    """知识库管理页：上传文档 → 预览分块 → 审核入库 → 回滚。"""
     st.title("📚 知识库管理")
-    st.caption("上传 .md / .docx / .pdf 文档，审核后自动并入检索知识库（支持回滚）")
+    st.caption("上传 .md / .docx / .pdf 文档，审核后自动并入检索知识库（支持回滚）｜ 管理员专属，操作留痕")
 
-    # ---- 上传区 ----
     with st.container(border=True):
         st.markdown("**上传新文档**")
         c1, c2 = st.columns([3, 1])
@@ -107,7 +229,7 @@ def _render_kb_page() -> None:
     try:
         docs = httpx.get(f"{API}/api/kb/docs", headers=_admin_headers(), timeout=10).json().get("docs", [])
     except Exception:  # noqa: BLE001
-        st.error("无法连接后端服务")
+        st.error("无法连接后端服务（或管理员令牌已失效）")
         return
 
     pending = [d for d in docs if d["status"] == "pending"]
@@ -157,189 +279,135 @@ def _render_kb_page() -> None:
     st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
 
 
-# ---------------- 页面导航（侧边栏 + 管理员门禁） ----------------
-with st.sidebar:
-    st.title("💄 悦己 YUEJI")
-    st.caption("美妆电商智能客服 Agent")
-    admin_mode = st.toggle("🔐 管理员模式", value=st.session_state.admin_ok)
-    if admin_mode and not st.session_state.admin_ok:
-        c1, c2 = st.columns([3, 1])
-        token_input = c1.text_input("管理口令", type="password", label_visibility="collapsed",
-                                    placeholder="输入管理员口令")
-        if c2.button("登录"):
+# ---------------- 登录 / 注册视图 ----------------
+def _render_login() -> None:
+    st.title("👤 用户登录")
+    st.caption("登录后享受专属客服：会话与订单绑定您的账号")
+    tab1, tab2 = st.tabs(["登录", "注册"])
+
+    with tab1:
+        with st.form("login"):
+            u = st.text_input("用户名")
+            p = st.text_input("密码", type="password")
+            if st.form_submit_button("登录", use_container_width=True):
+                try:
+                    r = httpx.post(f"{API}/api/auth/login", json={"username": u, "password": p}, timeout=15)
+                    if r.status_code == 200:
+                        st.session_state.user = r.json()
+                        st.session_state.view = "user"
+                        st.rerun()
+                    else:
+                        st.error(r.json().get("detail", "登录失败"))
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"网络错误：{e}")
+        st.info("演示账号：**demo1** / **demo2**（密码均为 demo123）—— demo1 可查本人订单 U001")
+
+    with tab2:
+        with st.form("register"):
+            u2 = st.text_input("新用户名")
+            p2 = st.text_input("新密码", type="password", help="至少6位")
+            if st.form_submit_button("注册", use_container_width=True):
+                try:
+                    r = httpx.post(f"{API}/api/auth/register", json={"username": u2, "password": p2}, timeout=15)
+                    if r.status_code == 200:
+                        st.success("注册成功，请到「登录」页登录")
+                    else:
+                        st.error(r.json().get("detail", "注册失败"))
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"网络错误：{e}")
+
+
+# ---------------- 管理员登录视图 ----------------
+def _render_admin_login() -> None:
+    st.title("🔐 管理员登录")
+    st.caption("仅限知识库管理员（口令见服务端配置 ADMIN_TOKEN）")
+    with st.form("admin_login"):
+        p = st.text_input("管理员口令", type="password")
+        if st.form_submit_button("登录", use_container_width=True):
             try:
-                r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": token_input}, timeout=10)
+                r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": p}, timeout=10)
                 if r.status_code == 200:
-                    st.session_state.admin_token = token_input
+                    st.session_state.admin_token = p
                     st.session_state.admin_ok = True
+                    st.session_state.admin_name = "admin"
+                    st.session_state.view = "admin"
                     st.rerun()
                 else:
                     st.error("口令错误")
             except Exception as e:  # noqa: BLE001
-                st.error(f"验证失败：{e}")
-    if admin_mode and st.session_state.admin_ok and st.button("🚪 退出管理员", use_container_width=True):
-        st.session_state.admin_ok = False
-        st.session_state.admin_token = ""
-        st.rerun()
-    page_options = ["💬 客服对话"] + (["📚 知识库管理"] if st.session_state.admin_ok else [])
-    page = st.radio("页面", page_options, label_visibility="collapsed")
-    st.divider()
+                st.error(f"网络错误：{e}")
 
-if page == "📚 知识库管理":
-    _render_kb_page()
-    st.stop()
 
-# ---------------- 侧边栏（对话页） ----------------
+def _nav_current() -> str:
+    """根据当前 view 反推导航项（刷新后保持选中）。"""
+    if st.session_state.view == "portal":
+        return "🏠 门户客服"
+    if st.session_state.view == "login":
+        return "👤 登录 / 注册" if not st.session_state.user else f"👤 {st.session_state.user['username']} 专属客服"
+    if st.session_state.view == "user":
+        return f"👤 {st.session_state.user['username']} 专属客服" if st.session_state.user else "🏠 门户客服"
+    if st.session_state.view == "admin":
+        return "🔐 管理员"
+    return "🏠 门户客服"
+
+
+# ---------------- 顶部导航（四视图状态机） ----------------
+if "view" not in st.session_state:
+    st.session_state.view = "portal"
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "admin_ok" not in st.session_state:
+    st.session_state.admin_ok = False
+if "admin_token" not in st.session_state:
+    st.session_state.admin_token = ""
+
 with st.sidebar:
     st.title("💄 悦己 YUEJI")
     st.caption("美妆电商智能客服 Agent")
-    uid_input = st.text_input("👤 用户 ID", value=st.session_state.user_id, max_chars=20,
-                              help="会话绑定到该用户；订单查询只返回本人订单（可用 U001~U010 演示）")
-    if uid_input.strip() != st.session_state.user_id:
-        st.session_state.user_id = uid_input.strip() or "guest"
-        st.info("已切换用户，点击「新会话」以新身份开始")
-    if st.button("🆕 新会话", use_container_width=True):
-        new_session()
-        st.rerun()
+    nav_options = ["🏠 门户客服"]
+    if st.session_state.user:
+        nav_options.append(f"👤 {st.session_state.user['username']} 专属客服")
+    else:
+        nav_options.append("👤 登录 / 注册")
+    nav_options.append("🔐 管理员")
+    choice = st.radio("导航", nav_options, label_visibility="collapsed", index=nav_options.index(_nav_current()))
     st.divider()
-    st.markdown(f"**当前用户**：`{st.session_state.user_id}`")
-    st.markdown("**会话 ID**")
-    st.code(st.session_state.session_id, language=None)
-    st.divider()
-    st.markdown("**可以这样问**")
-    st.caption("• 这款面霜适合敏感肌吗\n• 查一下我的订单\n• 我要退货\n• 我是油皮推荐什么\n• 售后政策是怎样的")
-    st.divider()
-    st.caption("v1.0 · DeepSeek + RAG + Function Calling")
 
-# ---------------- 主区域 ----------------
-st.title("💬 小悦 · 悦己美妆客服")
-st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
-
-
-def _render_order_card(tool_call: dict) -> None:
-    """根据工具调用参数重新查询订单并渲染卡片。"""
-    args = tool_call.get("arguments", {})
-    oid = args.get("order_id", "")
-    tail = args.get("phone_tail", "")
-    if not oid:
-        return
-    try:
-        resp = httpx.get(f"{API}/api/order/{oid}", params={"phone_tail": tail}, timeout=10)
-        if resp.status_code != 200:
-            return
-        order = resp.json()
-        with st.container(border=True):
-            st.markdown(f"📦 **{order['order_id']}** · {order['status']}")
-            items = order.get("items", [])
-            for it in items:
-                st.markdown(f"- {it['name']} ×{it['qty']}  ¥{it['price']}")
-            st.markdown(f"**合计：¥{order['total_amount']}**")
-            if order.get("latest_event"):
-                st.caption(f"🚚 最新物流：{order['latest_event']['desc']}（{order['latest_event']['time']}）")
-    except Exception:  # noqa: BLE001
-        pass
+    if st.session_state.user and choice.startswith("👤"):
+        if st.button("🚪 退出登录", use_container_width=True):
+            httpx.post(f"{API}/api/auth/logout",
+                       headers={"X-Auth-Token": st.session_state.user["token"]}, timeout=10)
+            st.session_state.user = None
+            st.session_state.view = "portal"
+            st.rerun()
+    if choice.startswith("🔐") and st.session_state.admin_ok:
+        if st.button("🚪 退出管理员", use_container_width=True):
+            st.session_state.admin_ok = False
+            st.session_state.admin_token = ""
+            st.session_state.view = "portal"
+            st.rerun()
+    st.caption("v3.1 · 门户/登录/专属客服/管理员")
 
 
-def _render_recommendations(extra: dict) -> None:
-    recs = extra.get("recommendations", [])
-    if not recs:
-        return
-    st.markdown("#### ✨ 为你推荐")
-    cols = st.columns(len(recs))
-    for col, rec in zip(cols, recs):
-        with col:
-            with st.container(border=True):
-                st.markdown(f"**{rec['name']}**")
-                st.markdown(f"¥{rec['price']} · {rec.get('category', '')}")
-                st.caption(" / ".join(rec.get("efficacy", [])[:2]))
-                st.caption("✓ " + "；".join(rec.get("reasons", [])[:2]))
-    if extra.get("routine"):
-        st.markdown("**搭配建议**：")
-        st.markdown(" → ".join(f"{r['name']}（¥{r['price']}）" for r in extra["routine"]))
+# ---------------- 视图分发 ----------------
+if choice.startswith("🏠"):
+    st.session_state.view = "portal"
+    _render_chat("guest", "", title="💬 小悦 · 悦己美妆客服（游客）")
+    st.caption("💡 登录后可绑定专属账号与订单；游客会话不关联用户。")
 
+elif choice.startswith("👤 登录"):
+    st.session_state.view = "login"
+    _render_login()
 
-# 会话状态条
-meta = st.session_state.get("meta", {})
-cols = st.columns(4)
-cols[0].metric("会话状态", meta.get("emotion", "normal"), delta=None)
-cols[1].metric("当前意图", meta.get("intent", "-"))
-cols[2].metric("转人工", "✅ 已转接" if meta.get("transferred") else "-")
-cols[3].metric("工单", meta.get("ticket", "-"))
+elif choice.startswith("👤") and st.session_state.user:
+    st.session_state.view = "user"
+    u = st.session_state.user
+    _render_chat(u["user_id"], u["token"], title=f"💬 小悦 · {u['username']} 专属客服")
+    st.caption(f"👤 已登录：{u['username']}（{u['user_id']}）· 订单查询仅返回本人订单")
 
-for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-        m = msg.get("meta", {})
-        render_sources(m.get("sources"))
-        if m.get("action") == "order_queried" and m.get("extra", {}).get("tool_call"):
-            _render_order_card(m["extra"]["tool_call"])
-        if m.get("action") == "ticket_created":
-            st.success(f"✅ 售后工单已生成：{m.get('extra', {}).get('ticket', '')}")
-        if m.get("action") == "transfer":
-            st.warning(f"🔄 已转接人工，工单号：{m.get('extra', {}).get('ticket_id', '')}")
-        if m.get("intent") == "skincare_recommend" and m.get("extra", {}).get("recommendations"):
-            _render_recommendations(m["extra"])
-
-
-# ---------------- 输入 ----------------
-if prompt := st.chat_input("请输入您的问题…"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_text = ""
-        data = {}
-        try:
-            with httpx.stream(
-                "POST",
-                f"{API}/api/chat/stream",
-                json={"session_id": st.session_state.session_id, "message": prompt,
-                      "user_id": st.session_state.get("user_id", "")},
-                timeout=120,
-            ) as resp:
-                resp.raise_for_status()
-                for line in resp.iter_lines():
-                    if not line or not line.startswith("data:"):
-                        continue
-                    payload = line[5:].strip()
-                    if payload == "[DONE]":
-                        break
-                    try:
-                        ev = __import__("json").loads(payload)
-                    except Exception:  # noqa: BLE001
-                        continue
-                    if ev.get("type") == "delta":
-                        full_text += ev["text"]
-                        placeholder.markdown(full_text + "▌")
-                    elif ev.get("type") == "done":
-                        data = ev.get("result", {})
-        except Exception as e:  # noqa: BLE001
-            placeholder.error(f"服务异常：{e}")
-            st.session_state.messages.pop()
-            st.stop()
-
-        placeholder.markdown(full_text)
-        render_sources(data.get("sources"))
-        if data.get("action") == "order_queried" and data.get("extra", {}).get("tool_call"):
-            _render_order_card(data["extra"]["tool_call"])
-        if data.get("action") == "ticket_created":
-            st.success(f"✅ 售后工单已生成：{data.get('extra', {}).get('ticket', '')}")
-        if data.get("action") == "transfer":
-            st.warning(f"🔄 已转接人工，工单号：{data.get('extra', {}).get('ticket_id', '')}")
-        if data.get("intent") == "skincare_recommend" and data.get("extra", {}).get("recommendations"):
-            _render_recommendations(data["extra"])
-
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": full_text,
-            "meta": data,
-        })
-        st.session_state.meta = {
-            "emotion": f"{EMOJI.get(data.get('emotion', 'normal'), '')} {data.get('emotion', 'normal')}",
-            "intent": data.get("intent", "-"),
-            "transferred": data.get("transferred", False),
-            "ticket": data.get("extra", {}).get("ticket") or data.get("extra", {}).get("ticket_id", "-"),
-        }
-        st.rerun()
+elif choice.startswith("🔐"):
+    st.session_state.view = "admin"
+    if st.session_state.admin_ok:
+        _render_kb_page()
+    else:
+        _render_admin_login()

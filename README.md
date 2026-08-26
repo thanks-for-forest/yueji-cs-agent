@@ -4,6 +4,7 @@
 
 基于 **LangGraph 编排 + RAG + Function Calling + 情绪转人工** 的美妆电商智能客服系统
 覆盖商品咨询 · 订单查询 · 退换货 · 护肤推荐 四大场景
+**四视图架构：门户（游客AI客服）｜ 登录/注册 → 用户专属AI客服 ｜ 管理员 → 知识库管理**
 
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Supervisor--Worker-7c9cff)
@@ -96,6 +97,7 @@ python -m scripts.stress_test --concurrency 50
 - PII 脱敏（日志/追踪记录手机号打码）
 - 会话级限流（20 req/min）
 - **角色门禁**：知识库管理仅管理员（X-Admin-Token），上传/审核/回滚操作留痕（谁传的/谁审的）
+- **用户认证**：注册/登录（pbkdf2 哈希 + 24h token），登录后会话与订单绑定账号（demo1→U001 / demo2→U005，密码 demo123）；游客仅门户对话
 
 ## 📁 目录结构
 
