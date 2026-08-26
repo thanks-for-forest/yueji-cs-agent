@@ -11,10 +11,17 @@ from __future__ import annotations
 
 import json as _json
 import re as _re
+import sys
 import urllib.parse
+from pathlib import Path
 
 import httpx
 import streamlit as st
+
+# 保证从任意工作目录启动都能 import 到项目根目录的 config 包
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
 
 from config import settings
 
