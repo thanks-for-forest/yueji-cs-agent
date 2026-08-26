@@ -64,44 +64,6 @@ if "user_id" not in st.session_state:
 if "session_id" not in st.session_state or "messages" not in st.session_state:
     new_session()
 
-# ---------------- 页面导航（侧边栏） ----------------
-with st.sidebar:
-    st.title("💄 悦己 YUEJI")
-    st.caption("美妆电商智能客服 Agent")
-    page = st.radio("页面", ["💬 客服对话", "📚 知识库管理"], label_visibility="collapsed")
-    st.divider()
-
-if page == "📚 知识库管理":
-    _render_kb_page()
-    st.stop()
-
-# ---------------- 侧边栏（对话页） ----------------
-with st.sidebar:
-    st.title("💄 悦己 YUEJI")
-    st.caption("美妆电商智能客服 Agent")
-    uid_input = st.text_input("👤 用户 ID", value=st.session_state.user_id, max_chars=20,
-                              help="会话绑定到该用户；订单查询只返回本人订单（可用 U001~U010 演示）")
-    if uid_input.strip() != st.session_state.user_id:
-        st.session_state.user_id = uid_input.strip() or "guest"
-        st.info("已切换用户，点击「新会话」以新身份开始")
-    if st.button("🆕 新会话", use_container_width=True):
-        new_session()
-        st.rerun()
-    st.divider()
-    st.markdown(f"**当前用户**：`{st.session_state.user_id}`")
-    st.markdown("**会话 ID**")
-    st.code(st.session_state.session_id, language=None)
-    st.divider()
-    st.markdown("**可以这样问**")
-    st.caption("• 这款面霜适合敏感肌吗\n• 查一下我的订单\n• 我要退货\n• 我是油皮推荐什么\n• 售后政策是怎样的")
-    st.divider()
-    st.caption("v1.0 · DeepSeek + RAG + Function Calling")
-
-# ---------------- 主区域 ----------------
-st.title("💬 小悦 · 悦己美妆客服")
-st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
-
-
 def _render_kb_page() -> None:
     """知识库管理页：上传文档 → 预览分块 → 审核入库 → 回滚。"""
     st.title("📚 知识库管理")
@@ -180,6 +142,44 @@ def _render_kb_page() -> None:
             st.caption(f"📄 {d['filename']} · {d['status']} · {d['created_at'][:16]}")
     st.divider()
     st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
+
+
+# ---------------- 页面导航（侧边栏） ----------------
+with st.sidebar:
+    st.title("💄 悦己 YUEJI")
+    st.caption("美妆电商智能客服 Agent")
+    page = st.radio("页面", ["💬 客服对话", "📚 知识库管理"], label_visibility="collapsed")
+    st.divider()
+
+if page == "📚 知识库管理":
+    _render_kb_page()
+    st.stop()
+
+# ---------------- 侧边栏（对话页） ----------------
+with st.sidebar:
+    st.title("💄 悦己 YUEJI")
+    st.caption("美妆电商智能客服 Agent")
+    uid_input = st.text_input("👤 用户 ID", value=st.session_state.user_id, max_chars=20,
+                              help="会话绑定到该用户；订单查询只返回本人订单（可用 U001~U010 演示）")
+    if uid_input.strip() != st.session_state.user_id:
+        st.session_state.user_id = uid_input.strip() or "guest"
+        st.info("已切换用户，点击「新会话」以新身份开始")
+    if st.button("🆕 新会话", use_container_width=True):
+        new_session()
+        st.rerun()
+    st.divider()
+    st.markdown(f"**当前用户**：`{st.session_state.user_id}`")
+    st.markdown("**会话 ID**")
+    st.code(st.session_state.session_id, language=None)
+    st.divider()
+    st.markdown("**可以这样问**")
+    st.caption("• 这款面霜适合敏感肌吗\n• 查一下我的订单\n• 我要退货\n• 我是油皮推荐什么\n• 售后政策是怎样的")
+    st.divider()
+    st.caption("v1.0 · DeepSeek + RAG + Function Calling")
+
+# ---------------- 主区域 ----------------
+st.title("💬 小悦 · 悦己美妆客服")
+st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
 
 
 def _render_order_card(tool_call: dict) -> None:
