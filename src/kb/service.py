@@ -79,12 +79,24 @@ async def upload_document(filename: str, data: bytes, category: str = "", create
     return {"doc_id": doc_id, "filename": filename, "chunk_count": len(chunk_records), "status": "pending"}
 
 
-async def list_docs() -> list[dict]:
+async def list_docs(status: str = "", category: str = "", keyword: str = "") -> list[dict]:
+    """文档列表，支持状态/分类/关键词筛选。"""
     await _ensure_kb_table()
     conn = await get_conn()
-    cur = await conn.execute(
-        "SELECT doc_id, filename, ext, category, status, chunk_count, created_by, approved_by, rejected_by, rolled_back_by, created_at, updated_at FROM kb_docs ORDER BY created_at DESC"
-    )
+    sql = ("SELECT doc_id, filename, ext, category, status, chunk_count, created_by, approved_by, "
+           "rejected_by, rolled_back_by, created_at, updated_at FROM kb_docs WHERE 1=1")
+    params: list = []
+    if status:
+        sql += " AND status = ?"
+        params.append(status)
+    if category:
+        sql += " AND category LIKE ?"
+        params.append(f"%{category}%")
+    if keyword:
+        sql += " AND filename LIKE ?"
+        params.append(f"%{keyword}%")
+    sql += " ORDER BY created_at DESC"
+    cur = await conn.execute(sql, params)
     return [dict(r) for r in await cur.fetchall()]
 
 
@@ -232,3 +244,106 @@ async def _kb_count_async() -> int:
     conn = await get_conn()
     cur = await conn.execute("SELECT COUNT(*) c FROM kb_docs WHERE status = 'active'")
     return (await cur.fetchone())["c"]
+
+
+# ---------------- 管理端增强功能（参考 Langchain-Chatchat/Dify 的 KB 管理） ----------------
+async def stats() -> dict:
+    """知识库统计：文档数、知识块、分类分布、基础库 vs KB 占比。"""
+    import numpy as np
+
+    docs = await list_docs()
+    active = [d for d in docs if d["status"] == "active"]
+    pending = [d for d in docs if d["status"] == "pending"]
+    active_chunks = sum(d["chunk_count"] for d in active)
+    # 基础库块数 = 总索引 - 活动 KB 块
+    chunks_path = settings.PROCESSED_DATA_DIR / "chunks.json"
+    total = len(json.loads(chunks_path.read_text(encoding="utf-8"))) if chunks_path.exists() else 0
+    base_chunks = max(total - active_chunks, 0)
+    # 分类分布（活动 + 待审核）
+    cat_dist: dict[str, int] = {}
+    for d in docs:
+        if d["status"] in ("active", "pending"):
+            cat = d["category"] or "未分类"
+            cat_dist[cat] = cat_dist.get(cat, 0) + d["chunk_count"]
+    return {
+        "doc_total": len(docs),
+        "pending": len(pending),
+        "active": len(active),
+        "active_chunks": active_chunks,
+        "base_chunks": base_chunks,
+        "category_dist": cat_dist,
+    }
+
+
+async def query_test(query: str, top_k: int = 5) -> list[dict]:
+    """检索命中测试：给定问题返回召回的检索块（含相似度/来源/是否 KB）。"""
+    from src.rag.retriever import retrieve_context
+
+    hits = await retrieve_context(query, top_k=top_k)
+    return [
+        {
+            "id": h["id"],
+            "type": h["meta"].get("type", ""),
+            "source": h["meta"].get("source", ""),
+            "name": h["meta"].get("name", "")[:40],
+            "dense_score": round(h.get("dense_score", 0.0), 3),
+            "text": h["text"][:220],
+            "is_kb": str(h["id"]).startswith("kb-"),
+        }
+        for h in hits
+    ]
+
+
+async def update_chunk(doc_id: str, index: int, text: str) -> dict:
+    """编辑单个分块文本并重新向量化；已入库文档则重建索引。"""
+    doc = await get_doc(doc_id)
+    if doc is None:
+        raise ValueError(f"文档不存在: {doc_id}")
+    chunks = doc["chunks"]
+    if not 0 <= index < len(chunks):
+        raise ValueError(f"分块索引越界（0-{len(chunks)-1}）")
+    text = text.strip()
+    if not text:
+        raise ValueError("分块内容不能为空")
+    from src.llm.client import get_llm
+
+    new_vec = (await get_llm().embed([text]))[0]
+    chunks[index] = {"text": text, "vector": new_vec}
+    conn = await get_conn()
+    await conn.execute("UPDATE kb_docs SET chunks = ?, updated_at = ? WHERE doc_id = ?",
+                       (json.dumps(chunks, ensure_ascii=False),
+                        datetime.now().isoformat(timespec="seconds"), doc_id))
+    await conn.commit()
+    if doc["status"] == "active":
+        await rebuild_active_index()
+    return {"doc_id": doc_id, "index": index, "updated": True}
+
+
+async def batch_approve(doc_ids: list[str], operator: str = "") -> dict:
+    """批量审核通过（先统一改状态，再重建一次索引）。"""
+    ok, skipped = [], []
+    for did in doc_ids:
+        doc = await get_doc(did)
+        if doc is None or doc["status"] != "pending":
+            skipped.append(did)
+        else:
+            await _set_status(did, "active", operator)
+            ok.append(did)
+    if ok:
+        await rebuild_active_index()
+    return {"approved": ok, "skipped": skipped}
+
+
+async def batch_rollback(doc_ids: list[str], operator: str = "") -> dict:
+    """批量回滚。"""
+    ok, skipped = [], []
+    for did in doc_ids:
+        doc = await get_doc(did)
+        if doc is None or doc["status"] != "active":
+            skipped.append(did)
+        else:
+            await _set_status(did, "rolled_back", operator)
+            ok.append(did)
+    if ok:
+        await rebuild_active_index()
+    return {"rolled_back": ok, "skipped": skipped}

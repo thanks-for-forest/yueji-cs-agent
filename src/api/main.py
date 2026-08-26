@@ -253,8 +253,9 @@ async def kb_upload(file: UploadFile, category: str = "", admin: str = Depends(r
 
 
 @app.get("/api/kb/docs")
-async def kb_docs(admin: str = Depends(require_admin)):
-    return {"docs": await kb_service.list_docs()}
+async def kb_docs(status: str = "", category: str = "", keyword: str = "",
+                 admin: str = Depends(require_admin)):
+    return {"docs": await kb_service.list_docs(status=status, category=category, keyword=keyword)}
 
 
 @app.get("/api/kb/docs/{doc_id}/chunks")
@@ -292,6 +293,50 @@ async def kb_delete(doc_id: str, admin: str = Depends(require_admin)):
         return await kb_service.delete_doc(doc_id)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+class QueryTestReq(BaseModel):
+    query: str = Field(min_length=1, max_length=200)
+    top_k: int = 5
+
+
+class ChunkEditReq(BaseModel):
+    index: int = 0
+    text: str = Field(min_length=1, max_length=2000)
+
+
+class BatchReq(BaseModel):
+    doc_ids: list[str] = []
+
+
+@app.get("/api/kb/stats")
+async def kb_stats(admin: str = Depends(require_admin)):
+    return await kb_service.stats()
+
+
+@app.post("/api/kb/query-test")
+async def kb_query_test(req: QueryTestReq, admin: str = Depends(require_admin)):
+    """检索命中测试：查看问题会召回哪些知识块。"""
+    return {"query": req.query, "hits": await kb_service.query_test(req.query, req.top_k)}
+
+
+@app.post("/api/kb/docs/{doc_id}/chunk/update")
+async def kb_chunk_update(doc_id: str, req: ChunkEditReq, admin: str = Depends(require_admin)):
+    """编辑单个分块并重新向量化（已入库则重建索引）。"""
+    try:
+        return await kb_service.update_chunk(doc_id, req.index, req.text)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/kb/docs/batch-approve")
+async def kb_batch_approve(req: BatchReq, admin: str = Depends(require_admin)):
+    return await kb_service.batch_approve(req.doc_ids, operator=admin)
+
+
+@app.post("/api/kb/docs/batch-rollback")
+async def kb_batch_rollback(req: BatchReq, admin: str = Depends(require_admin)):
+    return await kb_service.batch_rollback(req.doc_ids, operator=admin)
 
 
 # ---------------- 调试/工具 ----------------

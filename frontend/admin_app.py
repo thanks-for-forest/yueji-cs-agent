@@ -1,6 +1,10 @@
 """「悦己 YUEJI」管理后台 —— 独立子应用（端口 8502）。
 
-独立于客服门户的管理员界面：深色管理风，口令登录 → 知识库管理（上传/审核/回滚 + 审计）。
+功能（参考 Langchain-Chatchat / Dify / RAGFlow 的 KB 管理）：
+- 知识库统计面板（文档数/知识块/分类分布/基础库 vs KB 占比）
+- 文档列表筛选（状态/分类/关键词）+ 批量审核/回滚
+- 分块预览与编辑（改文本 → 重新向量化 → 已入库自动重建索引）
+- 检索命中测试（输入问题看召回块 + 一键问客服）
 启动：streamlit run frontend/admin_app.py --server.port 8502
 """
 from __future__ import annotations
@@ -14,7 +18,6 @@ import streamlit as st
 from config import settings
 
 API = settings.API_BASE_URL
-ADMIN_PORT = 8502
 
 st.set_page_config(page_title="悦己管理后台", page_icon="🛠️", layout="wide")
 
@@ -60,7 +63,7 @@ def _admin_headers() -> dict:
             "X-Admin-Name": st.session_state.get("admin_name", "admin") or "admin"}
 
 
-# ================= 管理员登录 =================
+# ================= 管理员登录（米黄色） =================
 def admin_login_ui() -> None:
     st.title("🛠️ 悦己管理后台")
     st.caption("知识库管理 · 管理员专属")
@@ -93,31 +96,165 @@ def admin_login_ui() -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
 
-# ================= 知识库管理 =================
+# ================= 统计面板 =================
+def stats_panel(stats: dict) -> None:
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("文档总数", stats["doc_total"])
+    m2.metric("待审核", stats["pending"])
+    m3.metric("已入库文档", stats["active"])
+    m4.metric("活动知识块", stats["active_chunks"])
+    m5.metric("基础库块", stats["base_chunks"])
+    cat = stats.get("category_dist", {})
+    if cat:
+        st.caption("分类分布（知识块）：" + " · ".join(f"{k} {v}" for k, v in sorted(cat.items(), key=lambda x: -x[1])))
+
+
+# ================= 检索命中测试 =================
+def query_test_tool() -> None:
+    with st.expander("🔎 检索命中测试（输入问题看召回块）", expanded=False):
+        c1, c2 = st.columns([4, 1])
+        with c1:
+            q = st.text_input("测试问题", placeholder="如：烟酰胺精华适合敏感肌吗", label_visibility="collapsed")
+        with c2:
+            topk = st.selectbox("TopK", [3, 5, 10], index=1, label_visibility="collapsed")
+        if q and st.button("🔎 测试检索", use_container_width=True):
+            r = httpx.post(f"{API}/api/kb/query-test",
+                           json={"query": q, "top_k": topk}, headers=_admin_headers(), timeout=30)
+            if r.status_code == 200:
+                hits = r.json().get("hits", [])
+                if not hits:
+                    st.warning("未召回到任何知识块（会走澄清/拒答流程）")
+                for h in hits:
+                    tag = "📚KB" if h["is_kb"] else f"{h['type']}"
+                    with st.container(border=True):
+                        st.markdown(f"**[{h['dense_score']:.2f}] {tag} · {h['name']}** (`{h['source']}`)")
+                        st.caption(h["text"])
+                if st.button("🤖 问客服（看完整回答）"):
+                    with st.chat_message("user"):
+                        st.markdown(q)
+                    with st.chat_message("assistant"):
+                        try:
+                            resp = httpx.post(f"{API}/api/chat",
+                                              json={"session_id": "admin-test", "message": q}, timeout=120)
+                            st.markdown(resp.json().get("reply", "（无回复）"))
+                        except Exception as e:  # noqa: BLE001
+                            st.error(str(e))
+            else:
+                st.error(f"检索失败：{r.status_code}")
+
+
+# ================= 分块编辑器 =================
+def _chunk_editor(doc_id: str, chunks: list[dict]) -> None:
+    """分块预览 + 编辑（改文本→重新向量化→已入库自动重建索引）。"""
+    with st.container(border=True):
+        for c in chunks[:8]:
+            new_text = st.text_area(f"块 #{c['index']}", value=c["text"], height=80,
+                                    key=f"ct-{doc_id}-{c['index']}")
+            if st.button("💾 保存该块（重新向量化）", key=f"cs-{doc_id}-{c['index']}",
+                         disabled=new_text == c["text"]):
+                r = httpx.post(f"{API}/api/kb/docs/{doc_id}/chunk/update",
+                               json={"index": c["index"], "text": new_text},
+                               headers=_admin_headers(), timeout=60)
+                if r.status_code == 200:
+                    st.success(f"块 #{c['index']} 已更新")
+                    st.rerun()
+                else:
+                    st.error(r.json().get("detail", "更新失败"))
+        if len(chunks) > 8:
+            st.caption(f"… 共 {len(chunks)} 块，仅显示前 8 块")
+
+
+# ================= 文档管理（筛选/批量/分块编辑） =================
+def doc_listing(docs: list[dict]) -> None:
+    pending = [d for d in docs if d["status"] == "pending"]
+    active = [d for d in docs if d["status"] == "active"]
+    other = [d for d in docs if d["status"] not in ("pending", "active")]
+
+    if pending:
+        st.markdown(f"#### ⏳ 待审核（{len(pending)}）· 可批量")
+        sel_p = {d["doc_id"]: st.checkbox(f"📄 {d['filename']} · {d['chunk_count']}块"
+                                          f"（上传人：{d.get('created_by') or '-'}）", key=f"bp-{d['doc_id']}")
+                 for d in pending}
+        c1, c2 = st.columns(2)
+        if c1.button("✅ 批量通过", use_container_width=True):
+            ids = [k for k, v in sel_p.items() if v]
+            if ids:
+                httpx.post(f"{API}/api/kb/docs/batch-approve", json={"doc_ids": ids},
+                           headers=_admin_headers(), timeout=120)
+                st.success(f"批量通过 {len(ids)} 个文档")
+                st.rerun()
+        if c2.button("❌ 批量拒绝", use_container_width=True):
+            ids = [k for k, v in sel_p.items() if v]
+            for did in ids:
+                httpx.post(f"{API}/api/kb/docs/{did}/reject", headers=_admin_headers(), timeout=10)
+            if ids:
+                st.rerun()
+        st.divider()
+        for d in pending:
+            with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
+                             f"（上传人：{d.get('created_by') or '-'}）"):
+                try:
+                    chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks",
+                                       headers=_admin_headers(), timeout=10).json().get("chunks", [])
+                except Exception:  # noqa: BLE001
+                    chunks = []
+                _chunk_editor(d["doc_id"], chunks)
+                c1, c2 = st.columns(2)
+                if c1.button("✅ 审核通过", key=f"ap-{d['doc_id']}"):
+                    httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", headers=_admin_headers(), timeout=120)
+                    st.rerun()
+                if c2.button("❌ 拒绝", key=f"rj-{d['doc_id']}"):
+                    httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", headers=_admin_headers(), timeout=10)
+                    st.rerun()
+
+    if active:
+        st.markdown(f"#### ✅ 已入库（{len(active)}）· 可批量回滚")
+        sel_a = {d["doc_id"]: st.checkbox(f"📄 {d['filename']} · {d['chunk_count']}块"
+                                          f"（审核人：{d.get('approved_by') or '-'}）", key=f"ba-{d['doc_id']}")
+                 for d in active}
+        if st.button("↩️ 批量回滚", use_container_width=True):
+            ids = [k for k, v in sel_a.items() if v]
+            if ids:
+                httpx.post(f"{API}/api/kb/docs/batch-rollback", json={"doc_ids": ids},
+                           headers=_admin_headers(), timeout=120)
+                st.success(f"批量回滚 {len(ids)} 个文档")
+                st.rerun()
+        st.divider()
+        for d in active:
+            with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
+                             f"（审核人：{d.get('approved_by') or '-'}）"):
+                st.caption(f"分类：{d['category'] or '-'}")
+                try:
+                    chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks",
+                                       headers=_admin_headers(), timeout=10).json().get("chunks", [])
+                except Exception:  # noqa: BLE001
+                    chunks = []
+                _chunk_editor(d["doc_id"], chunks)
+                if st.button("↩️ 回滚（从知识库移除）", key=f"rb-{d['doc_id']}"):
+                    httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", headers=_admin_headers(), timeout=120)
+                    st.rerun()
+
+    if other:
+        st.markdown(f"#### 🗂️ 历史（{len(other)}）")
+        for d in other:
+            st.caption(f"📄 {d['filename']} · {d['status']} · {d['created_at'][:16]}")
+
+
+# ================= 主页面 =================
 def kb_page() -> None:
     st.title("🛠️ 悦己管理后台 · 知识库")
-    st.caption("上传 .md / .docx / .pdf → 分块预览 → 审核入库 → 回滚（操作留痕）")
+    st.caption("上传 .md / .docx / .pdf → 分块预览/编辑 → 审核入库 → 回滚（操作留痕）｜ 支持检索命中测试")
 
     try:
-        docs = httpx.get(f"{API}/api/kb/docs", headers=_admin_headers(), timeout=10).json().get("docs", [])
+        stats = httpx.get(f"{API}/api/kb/stats", headers=_admin_headers(), timeout=10).json()
+        stats_panel(stats)
     except Exception:  # noqa: BLE001
         st.error("无法连接后端服务（或管理员令牌已失效）")
         return
 
-    pending = [d for d in docs if d["status"] == "pending"]
-    active = [d for d in docs if d["status"] == "active"]
-    other = [d for d in docs if d["status"] not in ("pending", "active")]
-    total_chunks = sum(d["chunk_count"] for d in active)
+    query_test_tool()
 
-    # 指标行（管理风）
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("待审核文档", len(pending))
-    m2.metric("已入库文档", len(active))
-    m3.metric("活动知识块", total_chunks)
-    m4.metric("历史记录", len(other))
     st.divider()
-
-    # 上传区
     with st.container(border=True):
         st.markdown("**⬆️ 上传新文档**")
         c1, c2 = st.columns([3, 1])
@@ -142,43 +279,29 @@ def kb_page() -> None:
                 st.error(f"上传失败：{e}")
 
     st.divider()
-    st.markdown(f"#### ⏳ 待审核（{len(pending)}）")
-    if not pending:
-        st.caption("暂无待审核文档")
-    for d in pending:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}（上传人：{d.get('created_by') or '-'}）"):
-            try:
-                chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks", headers=_admin_headers(), timeout=10).json().get("chunks", [])
-                for c in chunks[:5]:
-                    st.code(c["text"][:300], language=None)
-                if len(chunks) > 5:
-                    st.caption(f"… 共 {len(chunks)} 块，其余省略")
-            except Exception:  # noqa: BLE001
-                st.caption("预览加载失败")
-            c1, c2 = st.columns(2)
-            if c1.button("✅ 审核通过", key=f"ap-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", headers=_admin_headers(), timeout=120)
-                st.success("已入库")
-                st.rerun()
-            if c2.button("❌ 拒绝", key=f"rj-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", headers=_admin_headers(), timeout=10)
-                st.rerun()
+    f1, f2, f3 = st.columns([1, 1, 1])
+    with f1:
+        f_status = st.selectbox("状态筛选", ["全部", "待审核", "已入库", "历史"], index=0)
+    with f2:
+        f_cat = st.text_input("分类筛选", value="", placeholder="如 活动")
+    with f3:
+        f_kw = st.text_input("关键词（文件名）", value="", placeholder="搜索文档名")
+    status_map = {"待审核": "pending", "已入库": "active", "历史": "other"}
+    params = {}
+    if f_status != "全部":
+        params["status"] = status_map[f_status]
+    if f_cat:
+        params["category"] = f_cat
+    if f_kw:
+        params["keyword"] = f_kw
 
-    st.markdown(f"#### ✅ 已入库（{len(active)}）")
-    if not active:
-        st.caption("暂无已入库文档")
-    for d in active:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}（审核人：{d.get('approved_by') or '-'}）"):
-            st.caption(f"分类：{d['category'] or '-'}")
-            if st.button("↩️ 回滚（从知识库移除）", key=f"rb-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", headers=_admin_headers(), timeout=120)
-                st.success("已回滚")
-                st.rerun()
-
-    if other:
-        st.markdown(f"#### 🗂️ 历史（{len(other)}）")
-        for d in other:
-            st.caption(f"📄 {d['filename']} · {d['status']} · {d['created_at'][:16]}")
+    try:
+        docs = httpx.get(f"{API}/api/kb/docs", params=params, headers=_admin_headers(), timeout=10).json().get("docs", [])
+    except Exception:  # noqa: BLE001
+        st.error("无法连接后端服务（或管理员令牌已失效）")
+        return
+    st.caption(f"共 {len(docs)} 个文档（按当前筛选）")
+    doc_listing(docs)
 
 
 # ================= 入口 =================
