@@ -18,9 +18,8 @@ ADMIN_PORT = 8502
 
 st.set_page_config(page_title="悦己管理后台", page_icon="🛠️", layout="wide")
 
-# ---------- 深色管理风主题（注入 CSS） ----------
-st.markdown(
-    """
+# ---------- 主题：登录页米黄色 / 管理页深色（按视图切换） ----------
+DARK_CSS = """
 <style>
 [data-testid="stAppViewContainer"] { background: #0b1020; }
 [data-testid="stHeader"] { background: transparent; }
@@ -29,9 +28,29 @@ h1, h2, h3, p, label, .stCaption { color: #e8ecf5 !important; }
 .stMetric [data-testid="stMetricValue"] { color: #64ffda; }
 [data-testid="stMetricLabel"] { color: #8892b0; }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+"""
+
+BEIGE_CSS = """
+<style>
+[data-testid="stAppViewContainer"] { background: #F8F3E7; }
+[data-testid="stHeader"] { background: transparent; }
+h1, h2, h3 { color: #4A3F33 !important; }
+p, label, .stCaption { color: #5B4A3A !important; }
+[data-testid="stSidebar"] { background: #F0E8D5; border-right: 1px solid #E3D8C3; }
+.stButton button { background: #B08968; color: #fff; border: none; }
+.stButton button:hover { background: #9A7355; color: #fff; }
+.stTextInput input { background: #FDFAF2; border: 1px solid #E3D8C3; color: #4A3F33; }
+[data-testid="stMetricValue"] { color: #B08968; }
+</style>
+"""
+
+
+def _apply_theme() -> None:
+    css = DARK_CSS if st.session_state.get("admin_ok") else BEIGE_CSS
+    st.markdown(css, unsafe_allow_html=True)
+
+
+_apply_theme()
 
 _SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+|KB-\d+)", _re.I)
 
@@ -48,7 +67,15 @@ def admin_login_ui() -> None:
     st.divider()
     c1, _, c2 = st.columns([1, 0.2, 1])
     with c1:
-        st.markdown("#### 🔐 管理员登录")
+        st.markdown(
+            """
+            <div style="border:1px solid #E3D8C3;border-radius:16px;background:#FDFAF2;
+                 padding:26px 22px;box-shadow:0 6px 20px rgba(176,137,104,.18);">
+              <div style="font-size:1.3rem;font-weight:700;color:#4A3F33;">🔐 管理员登录</div>
+              <div style="color:#8A7A63;font-size:.85rem;margin:4px 0 14px;">悦己美妆管理后台 · 知识库管理</div>
+            """,
+            unsafe_allow_html=True,
+        )
         with st.form("admin_login"):
             p = st.text_input("管理员口令", type="password")
             if st.form_submit_button("登录", use_container_width=True):
@@ -63,6 +90,7 @@ def admin_login_ui() -> None:
                         st.error("口令错误")
                 except Exception as e:  # noqa: BLE001
                     st.error(f"网络错误：{e}")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ================= 知识库管理 =================
