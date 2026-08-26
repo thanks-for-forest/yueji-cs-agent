@@ -32,28 +32,63 @@ API = settings.API_BASE_URL
 st.set_page_config(page_title="悦己管理后台", page_icon="🛠️", layout="wide")
 
 # ---------- 主题：登录页米黄色 / 管理页深色（按视图切换） ----------
-DARK_CSS = """
+# 按钮统一高对比：stButton（普通按钮）/ stDownloadButton（下载按钮）/ stFormSubmitButton（表单提交）
+BTN_SEL = ".stButton > button, .stDownloadButton > button, .stFormSubmitButton > button"
+
+DARK_CSS = f"""
 <style>
-[data-testid="stAppViewContainer"] { background: #0b1020; }
-[data-testid="stHeader"] { background: transparent; }
-h1, h2, h3, p, label, .stCaption { color: #e8ecf5 !important; }
-[data-testid="stSidebar"] { background: #0d1526; border-right: 1px solid rgba(255,255,255,.08); }
-.stMetric [data-testid="stMetricValue"] { color: #64ffda; }
-[data-testid="stMetricLabel"] { color: #8892b0; }
+[data-testid="stAppViewContainer"] {{ background: #0b1020; }}
+[data-testid="stHeader"] {{ background: transparent; }}
+h1, h2, h3, p, label, .stCaption {{ color: #e8ecf5 !important; }}
+[data-testid="stSidebar"] {{ background: #0d1526; border-right: 1px solid rgba(255,255,255,.08); }}
+.stMetric [data-testid="stMetricValue"] {{ color: #64ffda; }}
+[data-testid="stMetricLabel"] {{ color: #8892b0; }}
+/* 深色主题按钮：实底深蓝 + 近白文字，保证与背景/按钮底色对比清晰 */
+{BTN_SEL} {{
+  background: #2f4a8a;
+  color: #f5f7ff !important;
+  border: 1px solid #5b7cc7;
+  font-weight: 600;
+}}
+{BTN_SEL}:hover {{
+  background: #3d5da3;
+  color: #ffffff !important;
+  border-color: #7d9ae0;
+}}
+{BTN_SEL}:focus, {BTN_SEL}:active {{
+  background: #3d5da3;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 0.2rem rgba(91,124,199,.45);
+}}
+{BTN_SEL}:disabled {{
+  background: #232d47;
+  color: #7d8aa8 !important;
+  border-color: #33405f;
+}}
+/* 侧栏（退出管理员）同深色规范 */
+[data-testid="stSidebar"] {BTN_SEL} {{
+  background: #2f4a8a;
+  color: #f5f7ff !important;
+  border: 1px solid #5b7cc7;
+  font-weight: 600;
+}}
+[data-testid="stSidebar"] {BTN_SEL}:hover {{ background: #3d5da3; color: #ffffff !important; }}
 </style>
 """
 
-BEIGE_CSS = """
+BEIGE_CSS = f"""
 <style>
-[data-testid="stAppViewContainer"] { background: #F8F3E7; }
-[data-testid="stHeader"] { background: transparent; }
-h1, h2, h3 { color: #4A3F33 !important; }
-p, label, .stCaption { color: #5B4A3A !important; }
-[data-testid="stSidebar"] { background: #F0E8D5; border-right: 1px solid #E3D8C3; }
-.stButton button { background: #B08968; color: #fff; border: none; }
-.stButton button:hover { background: #9A7355; color: #fff; }
-.stTextInput input { background: #FDFAF2; border: 1px solid #E3D8C3; color: #4A3F33; }
-[data-testid="stMetricValue"] { color: #B08968; }
+[data-testid="stAppViewContainer"] {{ background: #F8F3E7; }}
+[data-testid="stHeader"] {{ background: transparent; }}
+h1, h2, h3 {{ color: #4A3F33 !important; }}
+p, label, .stCaption {{ color: #5B4A3A !important; }}
+[data-testid="stSidebar"] {{ background: #F0E8D5; border-right: 1px solid #E3D8C3; }}
+/* 米黄主题按钮：暖棕底 + 白字（含下载/表单提交按钮），对比度 ≥4.9:1 */
+{BTN_SEL} {{ background: #8A6A4F; color: #fff !important; border: 1px solid #7A5B3E; font-weight: 600; }}
+{BTN_SEL}:hover {{ background: #7A5B3E; color: #fff !important; }}
+{BTN_SEL}:disabled {{ background: #c9b9a4; color: #fff !important; border-color: #c9b9a4; }}
+.stTextInput input {{ background: #FDFAF2; border: 1px solid #E3D8C3; color: #4A3F33; }}
+[data-testid="stMetricValue"] {{ color: #B08968; }}
 </style>
 """
 
