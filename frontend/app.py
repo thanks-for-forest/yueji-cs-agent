@@ -60,6 +60,16 @@ def new_session() -> None:
 
 if "user_id" not in st.session_state:
     st.session_state.user_id = "U001"  # 演示用户（订单数据 U001-U010）
+if "admin_ok" not in st.session_state:
+    st.session_state.admin_ok = False
+if "admin_token" not in st.session_state:
+    st.session_state.admin_token = ""
+
+
+def _admin_headers() -> dict:
+    """KB 管理请求的管理员头（令牌 + 操作人）。"""
+    return {"X-Admin-Token": st.session_state.admin_token,
+            "X-Admin-Name": st.session_state.get("user_id", "admin") or "admin"}
 
 if "session_id" not in st.session_state or "messages" not in st.session_state:
     new_session()
@@ -83,6 +93,7 @@ def _render_kb_page() -> None:
                     f"{API}/api/kb/upload",
                     files={"file": (up.name, up.getvalue(), up.type)},
                     data={"category": cat},
+                    headers=_admin_headers(),
                     timeout=120,
                 )
                 r.raise_for_status()
@@ -94,7 +105,7 @@ def _render_kb_page() -> None:
 
     st.divider()
     try:
-        docs = httpx.get(f"{API}/api/kb/docs", timeout=10).json().get("docs", [])
+        docs = httpx.get(f"{API}/api/kb/docs", headers=_admin_headers(), timeout=10).json().get("docs", [])
     except Exception:  # noqa: BLE001
         st.error("无法连接后端服务")
         return
@@ -107,9 +118,10 @@ def _render_kb_page() -> None:
     if not pending:
         st.caption("暂无待审核文档")
     for d in pending:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"):
+        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
+                         f"（上传人：{d.get('created_by') or '-'}）"):
             try:
-                chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks", timeout=10).json().get("chunks", [])
+                chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks", headers=_admin_headers(), timeout=10).json().get("chunks", [])
                 for c in chunks[:5]:
                     st.code(c["text"][:300], language=None)
                 if len(chunks) > 5:
@@ -118,21 +130,22 @@ def _render_kb_page() -> None:
                 st.caption("预览加载失败")
             c1, c2 = st.columns(2)
             if c1.button("✅ 审核通过", key=f"ap-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", timeout=120)
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", headers=_admin_headers(), timeout=120)
                 st.success("已入库，检索将即时命中")
                 st.rerun()
             if c2.button("❌ 拒绝", key=f"rj-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", timeout=10)
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", headers=_admin_headers(), timeout=10)
                 st.rerun()
 
     st.markdown(f"**已入库（{len(active)}）**")
     if not active:
         st.caption("暂无已入库文档")
     for d in active:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"):
+        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
+                         f"（审核人：{d.get('approved_by') or '-'}）"):
             st.caption(f"分类：{d['category'] or '-'}")
             if st.button("↩️ 回滚（从知识库移除）", key=f"rb-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", timeout=120)
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", headers=_admin_headers(), timeout=120)
                 st.success("已回滚")
                 st.rerun()
 
@@ -144,11 +157,32 @@ def _render_kb_page() -> None:
     st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
 
 
-# ---------------- 页面导航（侧边栏） ----------------
+# ---------------- 页面导航（侧边栏 + 管理员门禁） ----------------
 with st.sidebar:
     st.title("💄 悦己 YUEJI")
     st.caption("美妆电商智能客服 Agent")
-    page = st.radio("页面", ["💬 客服对话", "📚 知识库管理"], label_visibility="collapsed")
+    admin_mode = st.toggle("🔐 管理员模式", value=st.session_state.admin_ok)
+    if admin_mode and not st.session_state.admin_ok:
+        c1, c2 = st.columns([3, 1])
+        token_input = c1.text_input("管理口令", type="password", label_visibility="collapsed",
+                                    placeholder="输入管理员口令")
+        if c2.button("登录"):
+            try:
+                r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": token_input}, timeout=10)
+                if r.status_code == 200:
+                    st.session_state.admin_token = token_input
+                    st.session_state.admin_ok = True
+                    st.rerun()
+                else:
+                    st.error("口令错误")
+            except Exception as e:  # noqa: BLE001
+                st.error(f"验证失败：{e}")
+    if admin_mode and st.session_state.admin_ok and st.button("🚪 退出管理员", use_container_width=True):
+        st.session_state.admin_ok = False
+        st.session_state.admin_token = ""
+        st.rerun()
+    page_options = ["💬 客服对话"] + (["📚 知识库管理"] if st.session_state.admin_ok else [])
+    page = st.radio("页面", page_options, label_visibility="collapsed")
     st.divider()
 
 if page == "📚 知识库管理":

@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -132,30 +132,44 @@ async def chat_stream(req: ChatReq):
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
-# ---------------- 知识库管理（KB 上传/审核/回滚） ----------------
+# ---------------- 知识库管理（KB 上传/审核/回滚，需管理员令牌） ----------------
 from src.kb import service as kb_service
 
 
+async def require_admin(x_admin_token: str = Header(default=""),
+                        x_admin_name: str = Header(default="admin")):
+    """管理员门禁：X-Admin-Token 须等于配置的 ADMIN_TOKEN，操作人取 X-Admin-Name。"""
+    if x_admin_token != settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="需要管理员权限（X-Admin-Token）")
+    return x_admin_name
+
+
+@app.post("/api/kb/verify")
+async def kb_verify(admin: str = Depends(require_admin)):
+    """管理员口令验证（前端门禁用）。"""
+    return {"ok": True, "admin": admin}
+
+
 @app.post("/api/kb/upload")
-async def kb_upload(file: UploadFile, category: str = ""):
+async def kb_upload(file: UploadFile, category: str = "", admin: str = Depends(require_admin)):
     """上传知识库文档（.md/.docx/.pdf），解析后进入待审核。"""
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="文件为空")
     try:
-        doc = await kb_service.upload_document(file.filename or "unnamed.md", data, category)
+        doc = await kb_service.upload_document(file.filename or "unnamed.md", data, category, created_by=admin)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return doc
 
 
 @app.get("/api/kb/docs")
-async def kb_docs():
+async def kb_docs(admin: str = Depends(require_admin)):
     return {"docs": await kb_service.list_docs()}
 
 
 @app.get("/api/kb/docs/{doc_id}/chunks")
-async def kb_doc_chunks(doc_id: str):
+async def kb_doc_chunks(doc_id: str, admin: str = Depends(require_admin)):
     doc = await kb_service.get_doc(doc_id)
     if doc is None:
         raise HTTPException(status_code=404, detail="文档不存在")
@@ -163,28 +177,28 @@ async def kb_doc_chunks(doc_id: str):
 
 
 @app.post("/api/kb/docs/{doc_id}/approve")
-async def kb_approve(doc_id: str):
+async def kb_approve(doc_id: str, admin: str = Depends(require_admin)):
     try:
-        return await kb_service.approve_doc(doc_id)
+        return await kb_service.approve_doc(doc_id, operator=admin)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.post("/api/kb/docs/{doc_id}/reject")
-async def kb_reject(doc_id: str):
-    return await kb_service.reject_doc(doc_id)
+async def kb_reject(doc_id: str, admin: str = Depends(require_admin)):
+    return await kb_service.reject_doc(doc_id, operator=admin)
 
 
 @app.post("/api/kb/docs/{doc_id}/rollback")
-async def kb_rollback(doc_id: str):
+async def kb_rollback(doc_id: str, admin: str = Depends(require_admin)):
     try:
-        return await kb_service.rollback_doc(doc_id)
+        return await kb_service.rollback_doc(doc_id, operator=admin)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.delete("/api/kb/docs/{doc_id}")
-async def kb_delete(doc_id: str):
+async def kb_delete(doc_id: str, admin: str = Depends(require_admin)):
     try:
         return await kb_service.delete_doc(doc_id)
     except ValueError as e:

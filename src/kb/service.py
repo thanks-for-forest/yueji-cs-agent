@@ -28,6 +28,10 @@ CREATE TABLE IF NOT EXISTS kb_docs (
   status TEXT NOT NULL DEFAULT 'pending',   -- pending | active | rejected | rolled_back
   chunk_count INTEGER DEFAULT 0,
   chunks TEXT,                               -- JSON: [{text, vector:[...]}]
+  created_by TEXT DEFAULT '',
+  approved_by TEXT DEFAULT '',
+  rejected_by TEXT DEFAULT '',
+  rolled_back_by TEXT DEFAULT '',
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
@@ -37,11 +41,17 @@ CREATE TABLE IF NOT EXISTS kb_docs (
 async def _ensure_kb_table() -> None:
     conn = await get_conn()
     await conn.execute(KB_SCHEMA)
+    # 幂等迁移：老库补审计字段
+    cur = await conn.execute("PRAGMA table_info(kb_docs)")
+    cols = {r["name"] for r in await cur.fetchall()}
+    for col in ("created_by", "approved_by", "rejected_by", "rolled_back_by"):
+        if col not in cols:
+            await conn.execute(f"ALTER TABLE kb_docs ADD COLUMN {col} TEXT DEFAULT ''")
     await conn.commit()
 
 
-async def upload_document(filename: str, data: bytes, category: str = "") -> dict:
-    """解析 + 分块 + 向量化，写入待审核记录。返回 doc 摘要。"""
+async def upload_document(filename: str, data: bytes, category: str = "", created_by: str = "") -> dict:
+    """解析 + 分块 + 向量化，写入待审核记录（created_by 审计留痕）。返回 doc 摘要。"""
     await _ensure_kb_table()
     from src.kb.parser import chunk_text, parse_document
 
@@ -60,10 +70,10 @@ async def upload_document(filename: str, data: bytes, category: str = "") -> dic
     now = datetime.now().isoformat(timespec="seconds")
     conn = await get_conn()
     await conn.execute(
-        "INSERT INTO kb_docs (doc_id, filename, ext, category, status, chunk_count, chunks, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO kb_docs (doc_id, filename, ext, category, status, chunk_count, chunks, created_by, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)",
         (doc_id, filename, ext, category, "pending", len(chunk_records),
-         json.dumps(chunk_records, ensure_ascii=False), now, now),
+         json.dumps(chunk_records, ensure_ascii=False), created_by, now, now),
     )
     await conn.commit()
     return {"doc_id": doc_id, "filename": filename, "chunk_count": len(chunk_records), "status": "pending"}
@@ -73,7 +83,7 @@ async def list_docs() -> list[dict]:
     await _ensure_kb_table()
     conn = await get_conn()
     cur = await conn.execute(
-        "SELECT doc_id, filename, ext, category, status, chunk_count, created_at, updated_at FROM kb_docs ORDER BY created_at DESC"
+        "SELECT doc_id, filename, ext, category, status, chunk_count, created_by, approved_by, rejected_by, rolled_back_by, created_at, updated_at FROM kb_docs ORDER BY created_at DESC"
     )
     return [dict(r) for r in await cur.fetchall()]
 
@@ -90,31 +100,37 @@ async def get_doc(doc_id: str) -> dict | None:
     return d
 
 
-async def _set_status(doc_id: str, status: str) -> None:
+async def _set_status(doc_id: str, status: str, operator: str = "") -> None:
+    """更新状态并记录操作人（审计留痕）。"""
+    col = {"active": "approved_by", "rejected": "rejected_by", "rolled_back": "rolled_back_by"}.get(status)
     conn = await get_conn()
-    await conn.execute("UPDATE kb_docs SET status = ?, updated_at = ? WHERE doc_id = ?",
-                       (status, datetime.now().isoformat(timespec="seconds"), doc_id))
+    if col:
+        await conn.execute(f"UPDATE kb_docs SET status = ?, {col} = ?, updated_at = ? WHERE doc_id = ?",
+                           (status, operator, datetime.now().isoformat(timespec="seconds"), doc_id))
+    else:
+        await conn.execute("UPDATE kb_docs SET status = ?, updated_at = ? WHERE doc_id = ?",
+                           (status, datetime.now().isoformat(timespec="seconds"), doc_id))
     await conn.commit()
 
 
-async def approve_doc(doc_id: str) -> dict:
-    """审核通过：先标记 active，再重建合并索引（重建读取 active 集合）。"""
+async def approve_doc(doc_id: str, operator: str = "") -> dict:
+    """审核通过：先标记 active（记录操作人），再重建合并索引。"""
     doc = await get_doc(doc_id)
     if doc is None:
         raise ValueError(f"文档不存在: {doc_id}")
-    await _set_status(doc_id, "active")
+    await _set_status(doc_id, "active", operator)
     await rebuild_active_index()
     return {"doc_id": doc_id, "status": "active", "chunk_count": doc["chunk_count"]}
 
 
-async def reject_doc(doc_id: str) -> dict:
-    await _set_status(doc_id, "rejected")
+async def reject_doc(doc_id: str, operator: str = "") -> dict:
+    await _set_status(doc_id, "rejected", operator)
     return {"doc_id": doc_id, "status": "rejected"}
 
 
-async def rollback_doc(doc_id: str) -> dict:
-    """回滚：先标记 rolled_back，再重建索引（该文档随即从活动集合移除）。"""
-    await _set_status(doc_id, "rolled_back")
+async def rollback_doc(doc_id: str, operator: str = "") -> dict:
+    """回滚：先标记 rolled_back（记录操作人），再重建索引。"""
+    await _set_status(doc_id, "rolled_back", operator)
     await rebuild_active_index()
     return {"doc_id": doc_id, "status": "rolled_back"}
 

@@ -54,6 +54,10 @@ LANGFUSE_PUBLIC_KEY: str = os.getenv("LANGFUSE_PUBLIC_KEY", "")
 LANGFUSE_SECRET_KEY: str = os.getenv("LANGFUSE_SECRET_KEY", "")
 LANGFUSE_HOST: str = os.getenv("LANGFUSE_HOST", "http://127.0.0.1:3000")
 
+# ---------- 权限 ----------
+# 知识库管理管理员令牌（demo 默认口令，生产务必修改）。KB 接口需带 X-Admin-Token 头。
+ADMIN_TOKEN: str = os.getenv("ADMIN_TOKEN", "admin123456")
+
 # ---------- 评测时间基准 ----------
 # 评测时固定为订单生成锚点日期，保证"签收天数/受理期"类规则确定性（防止随真实日期漂移导致评测不稳定）。
 # 生产环境留空 = 使用真实当前时间。
