@@ -947,11 +947,14 @@
    "适合我吗"
   ],
   "expected_intent": "product_consult",
-  "must": [
+  "must": [],
+  "grade": "auto",
+  "must_any": [
    "肤质",
-   "产品"
-  ],
-  "grade": "auto"
+   "肌肤",
+   "产品",
+   "类型"
+  ]
  },
  {
   "id": "T078",
@@ -1010,10 +1013,14 @@
   "turns": [
    "这个和那个有什么区别"
   ],
-  "must": [
-   "产品"
-  ],
-  "grade": "auto"
+  "must": [],
+  "grade": "auto",
+  "must_any": [
+   "产品",
+   "哪款",
+   "哪两款",
+   "哪个"
+  ]
  },
  {
   "id": "T083",

@@ -43,8 +43,10 @@ CASE_TIMEOUT = 60  # 单个用例（含全部轮次）超时秒数，防止单�
 
 
 async def run_case(orch, case: dict) -> dict:
-    """重放一轮/多轮对话，返回最后一次结果（每轮独立会话，避免跨轮污染）。"""
+    """重放一轮/多轮对话，返回最后一次结果（每轮独立会话，避免跨轮污染），
+    并收集完整对话供 Judge 公平评估（多轮用例可看到每轮回复）。"""
     last = None
+    transcript: list[dict] = []
     for msg in case["turns"]:
         t0 = time.monotonic()
         try:
@@ -61,6 +63,9 @@ async def run_case(orch, case: dict) -> dict:
                 "transferred": False,
             }
         last["latency"] = time.monotonic() - t0
+        transcript.append({"role": "user", "content": msg})
+        transcript.append({"role": "assistant", "content": last.get("reply", "")})
+    last["transcript"] = transcript
     return last
 
 
@@ -92,11 +97,16 @@ async def judge_case(case: dict, result: dict) -> dict:
     from src.llm.client import get_llm
 
     llm = get_llm()
-    user_question = " | ".join(case["turns"])
+    transcript = result.get("transcript")
+    if transcript:
+        dialogue = "\n".join(f"{m['role']}: {m['content'][:300]}" for m in transcript)
+        user_question = f"以下为完整对话（多轮）：\n{dialogue}"
+    else:
+        user_question = " | ".join(case["turns"])
     resp = await llm.chat(
         [
             {"role": "system", "content": JUDGE_SYSTEM},
-            {"role": "user", "content": f"用户问题：{user_question}\n\n客服回复：{result.get('reply', '')}"},
+            {"role": "user", "content": f"{user_question}\n\n【最终客服回复】\n{result.get('reply', '')}"},
         ],
         json_mode=True,
         max_tokens=300,
