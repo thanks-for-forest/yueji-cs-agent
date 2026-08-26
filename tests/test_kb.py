@@ -96,6 +96,10 @@ def test_kb_flow_upload_approve_rollback():
         await rollback_doc(doc["doc_id"])
         hits = await retrieve_context("618大促有满减吗")
         assert not any(h["id"].startswith("kb-") for h in hits)
+        # 清理（避免测试文档跨轮次累积）
+        from src.kb.service import delete_docs_batch
+
+        await delete_docs_batch([doc["doc_id"]])
         from src.llm.client import close_llm
 
         await close_llm()
