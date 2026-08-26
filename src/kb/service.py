@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS kb_docs (
   status TEXT NOT NULL DEFAULT 'pending',   -- pending | active | rejected | rolled_back
   chunk_count INTEGER DEFAULT 0,
   chunks TEXT,                               -- JSON: [{text, vector:[...]}]
+  raw_text TEXT DEFAULT '',                  -- 原始文本（重新分块用）
   created_by TEXT DEFAULT '',
   approved_by TEXT DEFAULT '',
   rejected_by TEXT DEFAULT '',
@@ -37,27 +38,56 @@ CREATE TABLE IF NOT EXISTS kb_docs (
 );
 """
 
+# 检索命中测试历史（借鉴 Dify 的检索日志，用于命中率统计）
+QUERY_LOG_SCHEMA = """
+CREATE TABLE IF NOT EXISTS kb_query_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  query TEXT NOT NULL,
+  mode TEXT NOT NULL DEFAULT 'dense_first',
+  top_k INTEGER NOT NULL DEFAULT 5,
+  hit_count INTEGER NOT NULL DEFAULT 0,
+  top_score REAL NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+"""
+
 
 async def _ensure_kb_table() -> None:
     conn = await get_conn()
     await conn.execute(KB_SCHEMA)
+    await conn.execute(QUERY_LOG_SCHEMA)
     # 幂等迁移：老库补审计字段
     cur = await conn.execute("PRAGMA table_info(kb_docs)")
     cols = {r["name"] for r in await cur.fetchall()}
-    for col in ("created_by", "approved_by", "rejected_by", "rolled_back_by"):
+    for col in ("created_by", "approved_by", "rejected_by", "rolled_back_by", "raw_text"):
         if col not in cols:
             await conn.execute(f"ALTER TABLE kb_docs ADD COLUMN {col} TEXT DEFAULT ''")
     await conn.commit()
 
 
-async def upload_document(filename: str, data: bytes, category: str = "", created_by: str = "") -> dict:
+def _resolve_chunk_params(chunk_size: int | None, overlap: int | None) -> tuple[int, int]:
+    """分块策略参数：显式传入优先，否则用配置默认。"""
+    cs = chunk_size or settings.KB_CHUNK_SIZE
+    ov = overlap if overlap is not None else settings.KB_CHUNK_OVERLAP
+    if cs < 50:
+        cs = 50
+    if ov < 0:
+        ov = 0
+    if ov >= cs:
+        ov = max(cs // 2, 0)
+    return cs, ov
+
+
+async def upload_document(filename: str, data: bytes, category: str = "", created_by: str = "",
+                          chunk_size: int | None = None, overlap: int | None = None) -> dict:
     """解析 + 分块 + 向量化，写入待审核记录（created_by 审计留痕）。返回 doc 摘要。"""
     await _ensure_kb_table()
     from src.kb.parser import chunk_text, parse_document
 
+    cs, ov = _resolve_chunk_params(chunk_size, overlap)
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "md"
     text = parse_document(filename, data)
-    chunks = chunk_text(text)
+    chunks = chunk_text(text, chunk_size=cs, overlap=ov)
     if not chunks:
         raise ValueError("文档解析后为空，请检查内容")
 
@@ -70,13 +100,64 @@ async def upload_document(filename: str, data: bytes, category: str = "", create
     now = datetime.now().isoformat(timespec="seconds")
     conn = await get_conn()
     await conn.execute(
-        "INSERT INTO kb_docs (doc_id, filename, ext, category, status, chunk_count, chunks, created_by, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?)",
+        "INSERT INTO kb_docs (doc_id, filename, ext, category, status, chunk_count, chunks, raw_text, created_by, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
         (doc_id, filename, ext, category, "pending", len(chunk_records),
-         json.dumps(chunk_records, ensure_ascii=False), created_by, now, now),
+         json.dumps(chunk_records, ensure_ascii=False), text, created_by, now, now),
     )
     await conn.commit()
-    return {"doc_id": doc_id, "filename": filename, "chunk_count": len(chunk_records), "status": "pending"}
+    return {"doc_id": doc_id, "filename": filename, "chunk_count": len(chunk_records),
+            "status": "pending", "chunk_size": cs, "overlap": ov}
+
+
+async def upload_documents_batch(files: list[tuple[str, bytes]], category: str = "",
+                                 created_by: str = "", chunk_size: int | None = None,
+                                 overlap: int | None = None) -> dict:
+    """批量上传多文档：解析所有文件 → 一次性向量化全部块 → 逐文档入库（待审核）。
+
+    相比逐个上传减少多次 embed 往返。返回每文件结果 + 汇总。
+    """
+    await _ensure_kb_table()
+    from src.kb.parser import chunk_text, parse_document
+
+    cs, ov = _resolve_chunk_params(chunk_size, overlap)
+    parsed: list[dict] = []  # {filename, ext, text, chunks}
+    errors: list[dict] = []
+    for filename, data in files:
+        try:
+            ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "md"
+            text = parse_document(filename, data)
+            chunks = chunk_text(text, chunk_size=cs, overlap=ov)
+            if not chunks:
+                raise ValueError("文档解析后为空，请检查内容")
+            parsed.append({"filename": filename, "ext": ext, "text": text, "chunks": chunks})
+        except Exception as e:  # noqa: BLE001
+            errors.append({"filename": filename, "error": str(e)})
+
+    # 一次性向量化所有块
+    all_chunks = [c for p in parsed for c in p["chunks"]]
+    llm = get_llm()
+    vectors = await llm.embed(all_chunks) if all_chunks else []
+
+    results: list[dict] = []
+    vec_i = 0
+    conn = await get_conn()
+    now = datetime.now().isoformat(timespec="seconds")
+    for p in parsed:
+        n = len(p["chunks"])
+        chunk_records = [{"text": t, "vector": vectors[vec_i + j]} for j, t in enumerate(p["chunks"])]
+        vec_i += n
+        doc_id = f"KB-{datetime.now():%Y%m%d%H%M%S}-{uuid.uuid4().hex[:4].upper()}"
+        await conn.execute(
+            "INSERT INTO kb_docs (doc_id, filename, ext, category, status, chunk_count, chunks, raw_text, created_by, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (doc_id, p["filename"], p["ext"], category, "pending", n,
+             json.dumps(chunk_records, ensure_ascii=False), p["text"], created_by, now, now),
+        )
+        results.append({"doc_id": doc_id, "filename": p["filename"], "chunk_count": n, "status": "pending"})
+    await conn.commit()
+    return {"results": results, "errors": errors, "ok": len(results), "failed": len(errors),
+            "chunk_size": cs, "overlap": ov}
 
 
 async def list_docs(status: str = "", category: str = "", keyword: str = "") -> list[dict]:
@@ -275,25 +356,246 @@ async def stats() -> dict:
     }
 
 
-async def query_test(query: str, top_k: int = 5) -> list[dict]:
-    """检索命中测试：给定问题返回召回的检索块（含相似度/来源/是否 KB）。"""
-    from src.rag.retriever import catalog_context, is_catalog_query, retrieve_context
+async def query_test(query: str, top_k: int = 5, mode: str = "dense_first") -> list[dict]:
+    """检索命中测试：给定问题返回召回的检索块（含相似度/来源/是否 KB），并记录检索日志。
 
-    hits = await retrieve_context(query, top_k=top_k)
-    if not hits and is_catalog_query(query):
-        hits = catalog_context(query, top_k=top_k)
-    return [
+    mode: dense_first（Dense优先融合，主链路）| rrf（RRF融合）| bm25（纯关键词）| dense（纯向量）。
+    """
+    from src.rag.retriever import bm25_search, catalog_context, dense_search, is_catalog_query, retrieve_context
+
+    if mode == "bm25":
+        hits = await bm25_search(query, top_k=top_k)
+    elif mode == "dense":
+        hits = await dense_search(query, top_k=top_k)
+    else:
+        hits = await retrieve_context(query, top_k=top_k, mode=mode)
+        if not hits and is_catalog_query(query):
+            hits = catalog_context(query, top_k=top_k)
+
+    out = [
         {
             "id": h["id"],
             "type": h["meta"].get("type", ""),
             "source": h["meta"].get("source", ""),
             "name": h["meta"].get("name", "")[:40],
             "dense_score": round(h.get("dense_score", 0.0), 3),
+            "bm25_score": round(h.get("bm25_score", 0.0), 3),
+            "fusion_score": round(h.get("fusion_score", 0.0), 4),
             "text": h["text"][:220],
             "is_kb": str(h["id"]).startswith("kb-"),
         }
         for h in hits
     ]
+    await _log_query_test(query, mode, top_k, out)
+    return out
+
+
+async def _log_query_test(query: str, mode: str, top_k: int, hits: list[dict]) -> None:
+    """检索历史落库（命中率统计用），失败不影响检索本身。"""
+    try:
+        await _ensure_kb_table()
+        conn = await get_conn()
+        await conn.execute(
+            "INSERT INTO kb_query_log (query, mode, top_k, hit_count, top_score, created_at) VALUES (?,?,?,?,?,?)",
+            (query[:200], mode, top_k, len(hits),
+             max((h.get("dense_score") or 0.0) for h in hits) if hits else 0.0,
+             datetime.now().isoformat(timespec="seconds")),
+        )
+        await conn.commit()
+    except Exception as e:  # noqa: BLE001
+        logger.warning("检索日志写入失败: %s", e)
+
+
+async def query_stats(limit: int = 20) -> dict:
+    """检索历史统计：最近 N 条 + 平均命中率/命中分布（借鉴 Dify 检索日志）。"""
+    await _ensure_kb_table()
+    conn = await get_conn()
+    cur = await conn.execute("SELECT COUNT(*) c, SUM(hit_count) hits FROM kb_query_log")
+    row = await cur.fetchone()
+    total, hits = row["c"] or 0, row["hits"] or 0
+    cur = await conn.execute(
+        "SELECT query, mode, top_k, hit_count, top_score, created_at FROM kb_query_log "
+        "ORDER BY id DESC LIMIT ?", (limit,))
+    recent = [dict(r) for r in await cur.fetchall()]
+    # 按查询聚合：出现次数 + 平均命中数
+    agg: dict[str, dict] = {}
+    for r in recent:
+        k = r["query"]
+        a = agg.setdefault(k, {"times": 0, "hits": 0})
+        a["times"] += 1
+        a["hits"] += r["hit_count"]
+    top_queries = sorted(agg.items(), key=lambda kv: -kv[1]["times"])[:10]
+    return {
+        "total": total,
+        "avg_hit_rate": round(hits / total, 3) if total else 0.0,
+        "recent": recent,
+        "top_queries": [{"query": q, "times": v["times"], "avg_hits": round(v["hits"] / v["times"], 2)}
+                        for q, v in top_queries],
+    }
+
+
+async def delete_docs_batch(doc_ids: list[str]) -> dict:
+    """批量删除文档（含已入库的），全部删除后统一重建一次索引。"""
+    deleted, skipped = [], []
+    was_active = False
+    for did in doc_ids:
+        conn = await get_conn()
+        cur = await conn.execute("SELECT status FROM kb_docs WHERE doc_id = ?", (did,))
+        row = await cur.fetchone()
+        if row is None:
+            skipped.append(did)
+            continue
+        if row["status"] == "active":
+            was_active = True
+        await conn.execute("DELETE FROM kb_docs WHERE doc_id = ?", (did,))
+        await conn.commit()
+        deleted.append(did)
+    if was_active:
+        await rebuild_active_index()
+    return {"deleted": deleted, "skipped": skipped}
+
+
+async def get_categories() -> list[str]:
+    """分类清单：预置分类 ∪ 文档中出现的分类，按使用频次降序。"""
+    await _ensure_kb_table()
+    conn = await get_conn()
+    cur = await conn.execute(
+        "SELECT category, COUNT(*) c FROM kb_docs WHERE category != '' GROUP BY category ORDER BY c DESC")
+    used = [(r["category"], r["c"]) for r in await cur.fetchall()]
+    seen: set[str] = set()
+    out: list[str] = []
+    for cat, _cnt in sorted(used, key=lambda kv: -kv[1]):
+        if cat not in seen:
+            out.append(cat)
+            seen.add(cat)
+    for cat in settings.KB_PRESET_CATEGORIES:
+        if cat not in seen:
+            out.append(cat)
+            seen.add(cat)
+    return out
+
+
+async def rechunk_doc(doc_id: str, chunk_size: int | None = None, overlap: int | None = None) -> dict:
+    """按新分块策略重新切分文档并重新向量化（原始文本重新分块），已入库则重建索引。"""
+    doc = await get_doc(doc_id)
+    if doc is None:
+        raise ValueError(f"文档不存在: {doc_id}")
+    from src.kb.parser import chunk_text
+
+    cs, ov = _resolve_chunk_params(chunk_size, overlap)
+    raw = (doc.get("raw_text") or "").strip()
+    if not raw:
+        # 老数据无 raw_text：用现有分块文本拼接兜底
+        raw = "\n\n".join(c["text"] for c in doc["chunks"])
+    chunks = chunk_text(raw, chunk_size=cs, overlap=ov)
+    if not chunks:
+        raise ValueError("重新分块后为空，请检查文档内容")
+    vectors = await get_llm().embed(chunks)
+    chunk_records = [{"text": c, "vector": v} for c, v in zip(chunks, vectors)]
+    conn = await get_conn()
+    await conn.execute("UPDATE kb_docs SET chunks = ?, chunk_count = ?, updated_at = ? WHERE doc_id = ?",
+                       (json.dumps(chunk_records, ensure_ascii=False), len(chunk_records),
+                        datetime.now().isoformat(timespec="seconds"), doc_id))
+    await conn.commit()
+    if doc["status"] == "active":
+        await rebuild_active_index()
+    return {"doc_id": doc_id, "chunk_count": len(chunk_records), "chunk_size": cs, "overlap": ov}
+
+
+async def export_kb(fmt: str = "json") -> dict:
+    """导出知识库：json（结构化全量）或 md（人类可读），含基础库块 + KB 文档块。"""
+    fmt = fmt.lower()
+    if fmt not in ("json", "md"):
+        raise ValueError("导出格式仅支持 json / md")
+    docs = await list_docs()
+    base_chunks_path = settings.PROCESSED_DATA_DIR / "base_chunks.json"
+    base_chunks = json.loads(base_chunks_path.read_text(encoding="utf-8")) if base_chunks_path.exists() else []
+    # list_docs 不含 chunks，逐个补齐
+    doc_full = []
+    for d in docs:
+        full = await get_doc(d["doc_id"])
+        if full:
+            doc_full.append(full)
+    if fmt == "json":
+        payload = {
+            "exported_at": datetime.now().isoformat(timespec="seconds"),
+            "stats": await stats(),
+            "base_chunks": [{"id": c["id"], "text": c["text"], "meta": c["meta"]} for c in base_chunks],
+            "docs": [
+                {
+                    "doc_id": d["doc_id"], "filename": d["filename"], "category": d["category"],
+                    "status": d["status"], "chunk_count": d["chunk_count"],
+                    "chunks": [{"index": i, "text": c["text"]} for i, c in enumerate(d["chunks"])],
+                }
+                for d in doc_full
+            ],
+        }
+        return {"filename": f"yueji_kb_export_{datetime.now():%Y%m%d_%H%M%S}.json",
+                "content": json.dumps(payload, ensure_ascii=False, indent=1)}
+    lines = [f"# 悦己 YUEJI 知识库导出（{datetime.now():%Y-%m-%d %H:%M}）", ""]
+    for d in doc_full:
+        lines += [f"## {d['filename']}（{d['doc_id']}）",
+                  f"- 状态：{d['status']} ｜ 分类：{d['category'] or '-'} ｜ 分块：{d['chunk_count']}", ""]
+        for i, c in enumerate(d["chunks"]):
+            lines += [f"### 块 {i}", c["text"], ""]
+    return {"filename": f"yueji_kb_export_{datetime.now():%Y%m%d_%H%M%S}.md",
+            "content": "\n".join(lines)}
+
+
+async def get_index_status() -> dict:
+    """索引健康检查：文件存在性、块数一致性、组成与最后重建时间。"""
+    import numpy as np
+
+    chunks_path = settings.PROCESSED_DATA_DIR / "chunks.json"
+    meta_path = settings.VECTOR_INDEX_PATH.with_suffix(".meta.json")
+    base_vec_path = settings.PROCESSED_DATA_DIR / "base_vectors.npz"
+    issues: list[str] = []
+    info: dict = {"files": {}, "consistency": {}, "healthy": False}
+
+    def _exists(p) -> bool:
+        ok = p.exists()
+        info["files"][p.name] = ok
+        return ok
+
+    npz_ok = _exists(settings.VECTOR_INDEX_PATH)
+    chunks_ok = _exists(chunks_path)
+    meta_ok = _exists(meta_path)
+    base_ok = _exists(base_vec_path)
+
+    n_chunks = n_vec = n_meta = n_base = 0
+    if chunks_ok:
+        n_chunks = len(json.loads(chunks_path.read_text(encoding="utf-8")))
+    if npz_ok:
+        n_vec = int(np.load(str(settings.VECTOR_INDEX_PATH))["vectors"].shape[0])
+    if meta_ok:
+        n_meta = len(json.loads(meta_path.read_text(encoding="utf-8"))["ids"])
+    if base_ok:
+        n_base = int(np.load(str(base_vec_path))["vectors"].shape[0])
+
+    info["counts"] = {"chunks_json": n_chunks, "vectors_npz": n_vec, "meta_ids": n_meta,
+                      "base_vectors": n_base}
+    if not (npz_ok and chunks_ok and meta_ok):
+        issues.append("索引文件缺失（请运行 scripts/ingest.py 或强制重建）")
+    else:
+        if n_vec != n_chunks:
+            issues.append(f"向量矩阵({n_vec})与分块列表({n_chunks})不一致")
+        if n_meta != n_chunks:
+            issues.append(f"meta ids({n_meta})与分块列表({n_chunks})不一致")
+    info["consistency"] = {"chunks_vs_vectors": n_chunks == n_vec and n_chunks > 0,
+                           "chunks_vs_meta": n_chunks == n_meta and n_chunks > 0}
+    info["issues"] = issues
+    info["healthy"] = not issues
+    info["last_rebuild_at"] = (
+        datetime.fromtimestamp(settings.VECTOR_INDEX_PATH.stat().st_mtime).isoformat(timespec="seconds")
+        if npz_ok else None
+    )
+    return info
+
+
+async def rebuild_index() -> dict:
+    """强制重建合并索引（基础库 + 活动 KB 文档）。"""
+    await rebuild_active_index()
+    return await get_index_status()
 
 
 async def update_chunk(doc_id: str, index: int, text: str) -> dict:

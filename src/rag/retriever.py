@@ -62,12 +62,16 @@ def load_chunks() -> list[dict]:
     return _chunks
 
 
-async def hybrid_search(query: str, top_k: int | None = None) -> list[dict]:
-    """异步混合检索：Dense + BM25 → RRF 融合 → 返回带 meta 的结果（含融合分）。"""
+async def hybrid_search(query: str, top_k: int | None = None, mode: str | None = None) -> list[dict]:
+    """异步混合检索：Dense + BM25 → RRF 融合 → 返回带 meta 的结果（含融合分）。
+
+    mode: 覆盖全局 RETRIEVE_FUSION_MODE（dense_first | rrf），None = 用配置。
+    """
     chunks = load_chunks()
     if not chunks:
         return []
     top_k = top_k or settings.RETRIEVE_FUSION_TOP_K
+    mode = mode or settings.RETRIEVE_FUSION_MODE
 
     # 1) Dense
     llm = get_llm()
@@ -81,9 +85,9 @@ async def hybrid_search(query: str, top_k: int | None = None) -> list[dict]:
     bm25_scores = _bm25.get_scores(_tokenize(query))
     bm25_rank = sorted(range(len(bm25_scores)), key=lambda i: -bm25_scores[i])[: settings.RETRIEVE_BM25_TOP_K]
     bm25_ids = [chunks[i]["id"] for i in bm25_rank]
+    bm25_score_map: dict[str, float] = {chunks[i]["id"]: float(bm25_scores[i]) for i in bm25_rank}
 
     # 3) 融合（dense_first：Dense 优先 + BM25 独有兜底；rrf：经典倒数加权）
-    mode = settings.RETRIEVE_FUSION_MODE
     if mode == "rrf":
         k = settings.RETRIEVE_RRF_K
         rrf: dict[str, float] = {}
@@ -114,24 +118,71 @@ async def hybrid_search(query: str, top_k: int | None = None) -> list[dict]:
                 "id": cid,
                 "fusion_score": scores.get(cid, 0.0),
                 "dense_score": dense_scores.get(cid, 0.0),
+                "bm25_score": bm25_score_map.get(cid, 0.0),
                 "text": chunk["text"],
                 "meta": chunk["meta"],
             })
     return results
 
 
+async def bm25_search(query: str, top_k: int = 10) -> list[dict]:
+    """纯 BM25 关键词检索（命中测试对照用，无向量门槛）。"""
+    chunks = load_chunks()
+    if not chunks:
+        return []
+    scores = _bm25.get_scores(_tokenize(query))
+    ranked = sorted(range(len(scores)), key=lambda i: -scores[i])[:top_k]
+    return [
+        {
+            "id": chunks[i]["id"],
+            "bm25_score": float(scores[i]),
+            "dense_score": 0.0,
+            "fusion_score": 0.0,
+            "text": chunks[i]["text"],
+            "meta": chunks[i]["meta"],
+        }
+        for i in ranked
+        if scores[i] > 0
+    ]
+
+
+async def dense_search(query: str, top_k: int = 10) -> list[dict]:
+    """纯 Dense 向量检索（命中测试对照用，无门槛过滤）。"""
+    chunks = load_chunks()
+    if not chunks:
+        return []
+    llm = get_llm()
+    emb = (await llm.embed([query]))[0]
+    id2chunk = {c["id"]: c for c in chunks}
+    hits = get_product_store().query(emb, top_k=top_k)
+    return [
+        {
+            "id": h["id"],
+            "dense_score": h["score"],
+            "bm25_score": 0.0,
+            "fusion_score": 0.0,
+            "text": id2chunk[h["id"]]["text"],
+            "meta": id2chunk[h["id"]]["meta"],
+        }
+        for h in hits
+    ]
+
+
 async def retrieve_context(
     query: str,
     top_k: int | None = None,
     min_score: float | None = None,
+    mode: str | None = None,
 ) -> list[dict]:
     """面向 Agent 的检索入口：混合检索 + 可选 LLM 重排 + 双重阈值过滤。
+
+    mode: 覆盖融合模式（dense_first | rrf），None = 用配置。
 
     过滤门槛（模式无关）：
     1. 余弦相似度门槛：Top 结果的真实 bge-m3 相似度 < DENSE_MIN_SIMILARITY → 无可信答案（拒答/澄清）；
     2. 融合分门槛：兼容 rrf 模式的低分过滤。
     """
-    results = await hybrid_search(query, top_k=top_k or settings.RETRIEVE_RERANK_TOP_K)
+    results = await hybrid_search(query, top_k=top_k or settings.RETRIEVE_RERANK_TOP_K, mode=mode)
     min_score = min_score if min_score is not None else settings.RETRIEVE_MIN_SCORE
 
     if settings.RERANK_ENABLED and results:

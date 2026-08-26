@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import Depends, FastAPI, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -240,16 +240,79 @@ async def kb_verify(admin: str = Depends(require_admin)):
 
 
 @app.post("/api/kb/upload")
-async def kb_upload(file: UploadFile, category: str = "", admin: str = Depends(require_admin)):
-    """上传知识库文档（.md/.docx/.pdf），解析后进入待审核。"""
+async def kb_upload(file: UploadFile = File(...), category: str = Form(""),
+                    chunk_size: int = Form(0), overlap: int = Form(-1),
+                    admin: str = Depends(require_admin)):
+    """上传知识库文档（.md/.docx/.pdf/.txt/.csv/.xlsx/.html），解析后进入待审核。
+
+    注：category/chunk_size/overlap 均为 form 字段（FastAPI 标量参数默认是 query，
+    必须用 Form() 声明才能从前端 multipart 中读取）。
+    """
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="文件为空")
     try:
-        doc = await kb_service.upload_document(file.filename or "unnamed.md", data, category, created_by=admin)
+        doc = await kb_service.upload_document(
+            file.filename or "unnamed.md", data, category, created_by=admin,
+            chunk_size=chunk_size or None, overlap=overlap if overlap >= 0 else None)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return doc
+
+
+@app.post("/api/kb/upload-batch")
+async def kb_upload_batch(files: list[UploadFile] = File(...), category: str = Form(""),
+                          chunk_size: int = Form(0), overlap: int = Form(-1),
+                          admin: str = Depends(require_admin)):
+    """批量上传多文档：一次请求多个文件，解析后统一向量化、逐文档进入待审核。"""
+    if not files:
+        raise HTTPException(status_code=400, detail="未选择任何文件")
+    payload = []
+    for f in files:
+        data = await f.read()
+        if data:
+            payload.append((f.filename or "unnamed.md", data))
+    if not payload:
+        raise HTTPException(status_code=400, detail="所有文件均为空")
+    try:
+        return await kb_service.upload_documents_batch(
+            payload, category=category, created_by=admin,
+            chunk_size=chunk_size or None, overlap=overlap if overlap >= 0 else None)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/kb/export")
+async def kb_export(fmt: str = "json", admin: str = Depends(require_admin)):
+    """导出知识库（json 结构化 / md 可读）。"""
+    try:
+        return await kb_service.export_kb(fmt)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/kb/index-status")
+async def kb_index_status(admin: str = Depends(require_admin)):
+    """索引健康检查。"""
+    return await kb_service.get_index_status()
+
+
+@app.post("/api/kb/rebuild")
+async def kb_rebuild(admin: str = Depends(require_admin)):
+    """强制重建合并索引。"""
+    return await kb_service.rebuild_index()
+
+
+@app.get("/api/kb/query-stats")
+async def kb_query_stats(limit: int = 20, admin: str = Depends(require_admin)):
+    """检索测试历史统计。"""
+    return await kb_service.query_stats(limit)
+
+
+@app.get("/api/kb/categories")
+async def kb_categories(admin: str = Depends(require_admin)):
+    """分类清单（预置 ∪ 已使用）。"""
+    return {"categories": await kb_service.get_categories()}
 
 
 @app.get("/api/kb/docs")
@@ -298,11 +361,17 @@ async def kb_delete(doc_id: str, admin: str = Depends(require_admin)):
 class QueryTestReq(BaseModel):
     query: str = Field(min_length=1, max_length=200)
     top_k: int = 5
+    mode: str = "dense_first"  # dense_first | rrf | bm25 | dense
 
 
 class ChunkEditReq(BaseModel):
     index: int = 0
     text: str = Field(min_length=1, max_length=2000)
+
+
+class RechunkReq(BaseModel):
+    chunk_size: int = 0
+    overlap: int = -1
 
 
 class BatchReq(BaseModel):
@@ -316,8 +385,9 @@ async def kb_stats(admin: str = Depends(require_admin)):
 
 @app.post("/api/kb/query-test")
 async def kb_query_test(req: QueryTestReq, admin: str = Depends(require_admin)):
-    """检索命中测试：查看问题会召回哪些知识块。"""
-    return {"query": req.query, "hits": await kb_service.query_test(req.query, req.top_k)}
+    """检索命中测试：查看问题会召回哪些知识块（支持模式对照，结果记入检索日志）。"""
+    return {"query": req.query, "mode": req.mode,
+            "hits": await kb_service.query_test(req.query, req.top_k, req.mode)}
 
 
 @app.post("/api/kb/docs/{doc_id}/chunk/update")
@@ -337,6 +407,21 @@ async def kb_batch_approve(req: BatchReq, admin: str = Depends(require_admin)):
 @app.post("/api/kb/docs/batch-rollback")
 async def kb_batch_rollback(req: BatchReq, admin: str = Depends(require_admin)):
     return await kb_service.batch_rollback(req.doc_ids, operator=admin)
+
+
+@app.post("/api/kb/docs/batch-delete")
+async def kb_batch_delete(req: BatchReq, admin: str = Depends(require_admin)):
+    """批量删除文档（已入库的统一重建索引）。"""
+    return await kb_service.delete_docs_batch(req.doc_ids)
+
+
+@app.post("/api/kb/docs/{doc_id}/rechunk")
+async def kb_rechunk(doc_id: str, req: RechunkReq, admin: str = Depends(require_admin)):
+    """按新分块策略重新切分文档并重新向量化。"""
+    try:
+        return await kb_service.rechunk_doc(doc_id, req.chunk_size, req.overlap)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ---------------- 调试/工具 ----------------
