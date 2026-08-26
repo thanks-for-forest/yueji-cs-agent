@@ -13,7 +13,7 @@ from config import settings
 from src.agents.orchestrator import get_orchestrator
 from src.auth import service as auth_service
 from src.llm.client import close_llm
-from src.session.db import close_db, init_db
+from src.session.db import close_db, get_conn, init_db
 from src.session.service import get_session_service
 from src.tools.order_tools import query_order
 
@@ -188,6 +188,37 @@ async def auth_me(user: Optional[dict] = Depends(current_user)):
     if user is None:
         raise HTTPException(status_code=401, detail="未登录")
     return user
+
+
+@app.get("/api/user/sessions")
+async def user_sessions(x_auth_token: str = Header(default="")):
+    """当前用户的会话列表（含消息数与最近活动）。"""
+    user = await auth_service.get_user_by_token(x_auth_token)
+    if user is None:
+        raise HTTPException(status_code=401, detail="未登录")
+    conn = await get_conn()
+    cur = await conn.execute(
+        "SELECT s.session_id, s.created_at, s.updated_at, s.emotion, "
+        "(SELECT COUNT(*) FROM messages m WHERE m.session_id = s.session_id) AS msg_count "
+        "FROM sessions s WHERE s.user_id = ? ORDER BY s.updated_at DESC LIMIT 20",
+        (user["user_id"],),
+    )
+    return {"user_id": user["user_id"], "sessions": [dict(r) for r in await cur.fetchall()]}
+
+
+@app.get("/api/orders/me")
+async def orders_me(x_auth_token: str = Header(default="")):
+    """当前用户的订单列表（本人数据隔离）。"""
+    user = await auth_service.get_user_by_token(x_auth_token)
+    if user is None:
+        raise HTTPException(status_code=401, detail="未登录")
+    conn = await get_conn()
+    cur = await conn.execute(
+        "SELECT order_id, status, total_amount, created_at, aftersale_status "
+        "FROM orders WHERE user_id = ? ORDER BY created_at DESC",
+        (user["user_id"],),
+    )
+    return {"user_id": user["user_id"], "orders": [dict(r) for r in await cur.fetchall()]}
 
 
 # ---------------- 知识库管理（KB 上传/审核/回滚，需管理员令牌） ----------------

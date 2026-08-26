@@ -24,3 +24,16 @@ services:
       - API_PORT=8000
     command: streamlit run frontend/app.py --server.address 0.0.0.0 --server.port 8501
     restart: unless-stopped
+
+  admin:
+    build: .
+    container_name: yueji-cs-admin
+    ports:
+      - "8502:8502"
+    depends_on:
+      - api
+    env_file: .env
+    environment:
+      - API_PORT=8000
+    command: streamlit run frontend/admin_app.py --server.address 0.0.0.0 --server.port 8502
+    restart: unless-stopped

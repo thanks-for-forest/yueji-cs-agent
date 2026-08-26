@@ -4,7 +4,7 @@
 
 基于 **LangGraph 编排 + RAG + Function Calling + 情绪转人工** 的美妆电商智能客服系统
 覆盖商品咨询 · 订单查询 · 退换货 · 护肤推荐 四大场景
-**四页面架构（独立 UI/URL）**：`/portal` 门户（游客AI客服）· `/login` 登录/注册 · `/user` 用户专属AI客服 · `/admin` 管理员知识库管理
+**多页面 + 独立后台**：客服端三页面 `/portal`（门户·营销风）· `/login` 登录/注册 · `/user` 用户专属客服（侧栏含我的会话/订单）；**管理后台为独立子应用**（`:8502`，深色管理风）
 
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Supervisor--Worker-7c9cff)
@@ -55,7 +55,8 @@ python -m scripts.gen_orders     # 生成模拟订单
 python -m scripts.ingest         # 知识库向量化（需 Ollama bge-m3）
 
 python -m uvicorn src.api.main:app --port 8000 &   # 后端
-streamlit run frontend/app.py                       # 前端 http://localhost:8501
+streamlit run frontend/app.py                       # 客服端 http://localhost:8501
+streamlit run frontend/admin_app.py --server.port 8502   # 管理后台 http://localhost:8502
 ```
 
 自检：`python -m scripts.check_env` ｜ 公网部署：见 [`docs/公网部署方案.md`](docs/公网部署方案.md)

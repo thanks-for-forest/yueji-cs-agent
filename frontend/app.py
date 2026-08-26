@@ -204,12 +204,46 @@ def _render_chat(user_id: str, auth_token: str = "", title: str = "💬 小悦 �
             st.rerun()
 
 
-# ================= 页面 1：门户（游客 AI 客服） =================
+# ================= 页面 1：门户（游客 AI 客服 · 营销风） =================
 def page_portal() -> None:
     st.sidebar.markdown("### 🌐 门户模式")
     st.sidebar.caption("游客身份 · 会话不关联用户")
-    _render_chat("guest", "", title="💬 小悦 · 悦己美妆客服（游客）")
-    st.caption("💡 登录后（👤 登录/注册 页）可绑定专属账号与订单；管理员入口在「🔐 知识库管理」页。")
+
+    # 营销风 hero 横幅
+    st.markdown(
+        """
+        <div style="border-radius:16px;padding:34px 28px;margin-bottom:10px;
+             background:linear-gradient(120deg,#0b1020 0%,#1b2a4a 55%,#3d1f5c 100%);
+             border:1px solid rgba(255,255,255,.12);">
+          <div style="font-size:2rem;font-weight:700;color:#fff;margin-bottom:6px;">
+            💄 悦己 YUEJI · AI 护肤顾问「小悦」
+          </div>
+          <div style="color:#b8c4e0;font-size:1rem;">
+            商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 24 小时在线
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    c1, c2, c3 = st.columns(3)
+    for col, (icon, t, d) in zip(
+        [c1, c2, c3],
+        [("🛍️", "智能商品问答", "成分·功效·价格，带来源可溯源"),
+         ("💆", "专属护肤方案", "肤质标签匹配 + 搭配建议"),
+         ("🔄", "售后一站式", "退换货资格判定 + 工单生成")],
+    ):
+        with col:
+            st.markdown(
+                f"""<div style="border:1px solid rgba(255,255,255,.14);border-radius:12px;
+                    padding:14px;background:rgba(255,255,255,.05);">
+                    <div style="font-size:1.4rem">{icon}</div>
+                    <div style="font-weight:600;color:#e8ecf5;margin:4px 0">{t}</div>
+                    <div style="font-size:.82rem;color:#8892b0">{d}</div></div>""",
+                unsafe_allow_html=True,
+            )
+    st.divider()
+    _render_chat("guest", "", title="💬 和小悦聊聊")
+    st.caption("💡 登录后（👤 登录/注册 页）可绑定专属账号与订单；管理员后台在独立应用（端口 8502）。")
 
 
 # ================= 页面 2：登录 / 注册 =================
@@ -259,7 +293,42 @@ def page_auth() -> None:
                     st.error(f"网络错误：{e}")
 
 
-# ================= 页面 3：用户专属 AI 客服（守卫） =================
+# ================= 页面 3：用户专属 AI 客服（守卫 + 侧栏会话/订单） =================
+def _user_sessions(user: dict) -> list[dict]:
+    try:
+        r = httpx.get(f"{API}/api/user/sessions", headers={"X-Auth-Token": user["token"]}, timeout=10)
+        return r.json().get("sessions", []) if r.status_code == 200 else []
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def _user_orders(user: dict) -> list[dict]:
+    try:
+        r = httpx.get(f"{API}/api/orders/me", headers={"X-Auth-Token": user["token"]}, timeout=10)
+        return r.json().get("orders", []) if r.status_code == 200 else []
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def _load_history(user: dict, session_id: str) -> None:
+    """把历史会话加载到当前聊天视图。"""
+    try:
+        r = httpx.get(f"{API}/api/session/{session_id}/history",
+                      headers={"X-Auth-Token": user["token"]}, timeout=10)
+        if r.status_code != 200:
+            return
+        data = r.json()
+        msgs = [{"role": m["role"], "content": m["content"]}
+                for m in data.get("messages", []) if m["role"] in ("user", "assistant")]
+        uid = user["user_id"]
+        st.session_state[f"session_id_{uid}"] = session_id
+        st.session_state[f"messages_{uid}"] = msgs
+        st.session_state[f"meta_{uid}"] = {"emotion": data.get("emotion", "normal"), "intent": "-",
+                                           "transferred": False, "ticket": "-"}
+    except Exception:  # noqa: BLE001
+        pass
+
+
 def page_user() -> None:
     user = st.session_state.user
     if user is None:
@@ -268,134 +337,44 @@ def page_user() -> None:
         if st.button("去登录 / 注册"):
             st.switch_page(auth_page)
         return
-    st.sidebar.markdown("### 👤 专属模式")
-    st.sidebar.caption(f"{user['username']}（{user['user_id']}）· 订单查询仅返回本人订单")
-    if st.sidebar.button("🚪 退出登录", use_container_width=True):
-        httpx.post(f"{API}/api/auth/logout", headers={"X-Auth-Token": user["token"]}, timeout=10)
-        st.session_state.user = None
-        st.rerun()
-    _render_chat(user["user_id"], user["token"], title=f"💬 小悦 · {user['username']} 专属客服")
 
-
-# ================= 页面 4：管理员（口令登录 → 知识库管理） =================
-def _admin_headers() -> dict:
-    return {"X-Admin-Token": st.session_state.get("admin_token", ""),
-            "X-Admin-Name": st.session_state.get("admin_name", "admin") or "admin"}
-
-
-def page_admin() -> None:
-    st.sidebar.markdown("### 🔐 管理员")
-    if st.session_state.admin_ok:
-        if st.sidebar.button("🚪 退出管理员", use_container_width=True):
-            st.session_state.admin_ok = False
-            st.session_state.admin_token = ""
+    with st.sidebar:
+        st.markdown("### 👤 专属模式")
+        st.caption(f"{user['username']}（{user['user_id']}）· 数据仅本人可见")
+        if st.button("🚪 退出登录", use_container_width=True):
+            httpx.post(f"{API}/api/auth/logout", headers={"X-Auth-Token": user["token"]}, timeout=10)
+            st.session_state.user = None
             st.rerun()
-        _render_kb_page()
-    else:
-        st.title("🔐 管理员登录")
-        st.caption("仅限知识库管理员（口令见服务端配置 ADMIN_TOKEN）")
-        with st.form("admin_login"):
-            p = st.text_input("管理员口令", type="password")
-            if st.form_submit_button("登录", use_container_width=True):
-                try:
-                    r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": p}, timeout=10)
-                    if r.status_code == 200:
-                        st.session_state.admin_token = p
-                        st.session_state.admin_ok = True
-                        st.session_state.admin_name = "admin"
-                        st.rerun()
-                    else:
-                        st.error("口令错误")
-                except Exception as e:  # noqa: BLE001
-                    st.error(f"网络错误：{e}")
-
-
-def _render_kb_page() -> None:
-    st.title("📚 知识库管理")
-    st.caption("上传 .md / .docx / .pdf 文档，审核后自动并入检索知识库（支持回滚）｜ 管理员专属，操作留痕")
-
-    with st.container(border=True):
-        st.markdown("**上传新文档**")
-        c1, c2 = st.columns([3, 1])
-        with c1:
-            up = st.file_uploader("选择文件", type=["md", "txt", "docx", "pdf"], label_visibility="collapsed")
-        with c2:
-            cat = st.text_input("分类", value="", placeholder="如 活动/新品/公告")
-        if up is not None and st.button("⬆️ 上传并解析", use_container_width=True):
-            try:
-                r = httpx.post(
-                    f"{API}/api/kb/upload",
-                    files={"file": (up.name, up.getvalue(), up.type)},
-                    data={"category": cat},
-                    headers=_admin_headers(),
-                    timeout=120,
-                )
-                r.raise_for_status()
-                d = r.json()
-                st.success(f"✅ 已上传「{d['filename']}」，解析出 {d['chunk_count']} 个分块，状态：待审核")
+        st.divider()
+        # 我的会话
+        st.markdown("#### 📋 我的会话")
+        sessions = _user_sessions(user)
+        if not sessions:
+            st.caption("暂无历史会话")
+        for sess in sessions[:10]:
+            label = f"{sess['session_id'][:10]} · {sess['msg_count']}条 · {sess['updated_at'][:10]}"
+            if st.button(label, key=f"ss-{sess['session_id']}", use_container_width=True):
+                _load_history(user, sess["session_id"])
                 st.rerun()
-            except Exception as e:  # noqa: BLE001
-                st.error(f"上传失败：{e}")
-
-    st.divider()
-    try:
-        docs = httpx.get(f"{API}/api/kb/docs", headers=_admin_headers(), timeout=10).json().get("docs", [])
-    except Exception:  # noqa: BLE001
-        st.error("无法连接后端服务（或管理员令牌已失效）")
-        return
-
-    pending = [d for d in docs if d["status"] == "pending"]
-    active = [d for d in docs if d["status"] == "active"]
-    other = [d for d in docs if d["status"] not in ("pending", "active")]
-
-    st.markdown(f"**待审核（{len(pending)}）**")
-    if not pending:
-        st.caption("暂无待审核文档")
-    for d in pending:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
-                         f"（上传人：{d.get('created_by') or '-'}）"):
-            try:
-                chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks", headers=_admin_headers(), timeout=10).json().get("chunks", [])
-                for c in chunks[:5]:
-                    st.code(c["text"][:300], language=None)
-                if len(chunks) > 5:
-                    st.caption(f"… 共 {len(chunks)} 块，其余省略")
-            except Exception:  # noqa: BLE001
-                st.caption("预览加载失败")
-            c1, c2 = st.columns(2)
-            if c1.button("✅ 审核通过", key=f"ap-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", headers=_admin_headers(), timeout=120)
-                st.success("已入库，检索将即时命中")
-                st.rerun()
-            if c2.button("❌ 拒绝", key=f"rj-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", headers=_admin_headers(), timeout=10)
-                st.rerun()
-
-    st.markdown(f"**已入库（{len(active)}）**")
-    if not active:
-        st.caption("暂无已入库文档")
-    for d in active:
-        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"
-                         f"（审核人：{d.get('approved_by') or '-'}）"):
-            st.caption(f"分类：{d['category'] or '-'}")
-            if st.button("↩️ 回滚（从知识库移除）", key=f"rb-{d['doc_id']}"):
-                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", headers=_admin_headers(), timeout=120)
-                st.success("已回滚")
-                st.rerun()
-
-    if other:
-        st.markdown(f"**历史（{len(other)}）**")
-        for d in other:
-            st.caption(f"📄 {d['filename']} · {d['status']} · {d['created_at'][:16]}")
-    st.divider()
-    st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
+        st.divider()
+        # 我的订单
+        st.markdown("#### 📦 我的订单")
+        orders = _user_orders(user)
+        if not orders:
+            st.caption("暂无订单（新注册用户无预置订单）")
+        for o in orders[:8]:
+            st.markdown(f"**{o['order_id']}** · {o['status']} · ¥{o['total_amount']}")
+            st.caption(f"{o['created_at'][:10]}" + (f" · 售后:{o['aftersale_status']}" if o.get('aftersale_status') else ""))
+    _render_chat(user["user_id"], user["token"], title=f"💬 小悦 · {user['username']} 专属客服")
 
 
 # ================= 多页面路由（每个角色独立 UI/URL） =================
 portal_page = st.Page(page_portal, title="🏠 门户客服", url_path="portal", default=True)
 auth_page = st.Page(page_auth, title="👤 登录/注册", url_path="login")
 user_page = st.Page(page_user, title="👤 我的专属客服", url_path="user")
-admin_page = st.Page(page_admin, title="🔐 知识库管理", url_path="admin")
 
-nav = st.navigation([portal_page, auth_page, user_page, admin_page], position="sidebar")
+nav = st.navigation([portal_page, auth_page, user_page], position="sidebar")
+with st.sidebar:
+    st.divider()
+    st.caption("🛠️ 管理后台为独立应用：`http://localhost:8502`（详见 docs/部署手册.md）")
 nav.run()
