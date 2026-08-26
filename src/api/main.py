@@ -309,6 +309,15 @@ async def kb_query_stats(limit: int = 20, admin: str = Depends(require_admin)):
     return await kb_service.query_stats(limit)
 
 
+@app.get("/api/kb/retrieval-report")
+async def kb_retrieval_report(limit: int = 50, admin: str = Depends(require_admin)):
+    """检索评估报表：对检索评估对跑四模式命中测试，输出 recall@3/recall@5/延迟对比。
+
+    耗时随 limit 线性增长（每个检索对 × 4 模式各一次向量化），按需调用。
+    """
+    return await kb_service.retrieval_report(limit=limit)
+
+
 @app.get("/api/kb/categories")
 async def kb_categories(admin: str = Depends(require_admin)):
     """分类清单（预置 ∪ 已使用）。"""

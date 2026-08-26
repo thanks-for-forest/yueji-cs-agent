@@ -11,6 +11,8 @@ venv/
 
 # 数据与模型
 data/db/*.db
+data/db/*.db-wal
+data/db/*.db-shm
 data/processed/
 models/
 *.onnx

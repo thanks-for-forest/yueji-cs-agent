@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 
-from config import settings
 from src.agents.aftersale_agent import AftersaleAgent
 from src.agents.base_agent import AgentResult, parse_sources
 from src.agents.human_agent import HumanAgent

@@ -12,7 +12,6 @@
 """
 from __future__ import annotations
 
-import json as _json
 import re as _re
 import sys
 from pathlib import Path
@@ -262,6 +261,7 @@ def query_test_tool() -> None:
             else:
                 st.error(f"检索失败：{r.status_code}")
     query_stats_tool()
+    retrieval_report_tool()
 
 
 def query_stats_tool() -> None:
@@ -284,6 +284,48 @@ def query_stats_tool() -> None:
             for r in s.get("recent", [])[:8]:
                 st.caption(f"[{r['mode']}] {r['query'][:24]} → {r['hit_count']}块"
                            f" · top={r['top_score']:.2f} · {r['created_at'][11:19]}")
+
+
+def retrieval_report_tool() -> None:
+    """检索评估报表：四模式 recall@3/recall@5/延迟对比（数据驱动选择融合模式）。"""
+    with st.expander("📊 检索评估报表（四模式命中率对比）", expanded=False):
+        st.caption("对 eval/retrieval_pairs.json 的检索对（产品 40 + FAQ 217 + 政策 10）跑命中测试，"
+                   "统计各模式 recall@3 / recall@5（期望来源是否被召回）、平均延迟。"
+                   "用于量化选择融合模式与 TopK 参数。")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            n_pairs = st.selectbox("评估对数", [50, 100, 267], index=0,
+                                   format_func=lambda n: f"{n}（{'少量' if n < 100 else '全量' if n == 267 else '标准'}）")
+        with c2:
+            st.caption("运行约需 10-60 秒（每对 × 4 模式各一次向量化），期间请勿重复点击。")
+        if st.button("▶️ 运行检索评估", use_container_width=True):
+            try:
+                r = httpx.get(f"{API}/api/kb/retrieval-report", params={"limit": n_pairs},
+                              headers=_admin_headers(), timeout=600)
+                r.raise_for_status()
+                rep = r.json()
+                if not rep.get("modes"):
+                    st.warning("无评估对，请先运行 scripts/gen_retrieval_pairs.py")
+                    return
+                st.success(f"评估完成：{rep['pairs']} 条检索对 · {rep['generated_at'][:19]}")
+                rows = []
+                for mode, m in rep["modes"].items():
+                    rows.append({
+                        "模式": {"dense_first": "Dense优先", "rrf": "RRF融合",
+                                 "dense": "纯向量", "bm25": "纯关键词"}.get(mode, mode),
+                        "recall@3": m["recall_at_3"], "recall@5": m["recall_at_5"],
+                        "平均Top分": m["avg_top_dense_score"], "平均延迟ms": m["avg_latency_ms"],
+                    })
+                st.dataframe(rows, use_container_width=True, hide_index=True)
+                import pandas as pd
+
+                df = pd.DataFrame(rows)
+                st.bar_chart(df.set_index("模式")[["recall@5", "recall@3"]])
+                best = max(rep["modes"].items(), key=lambda kv: kv[1]["recall_at_5"])
+                st.caption(f"💡 当前主链路为 Dense优先（dense_first）；本次最优 recall@5 为 "
+                           f"**{best[0]}**（{best[1]['recall_at_5']:.1%}）")
+            except Exception as e:  # noqa: BLE001
+                st.error(f"评估失败：{e}")
 
 
 # ================= 分块编辑器 =================

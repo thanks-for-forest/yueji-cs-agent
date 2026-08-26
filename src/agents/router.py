@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 
-from config import settings
 from src.llm.client import get_llm
 
 logger = logging.getLogger(__name__)

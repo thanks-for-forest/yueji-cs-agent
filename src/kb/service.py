@@ -11,7 +11,6 @@ import json
 import logging
 import uuid
 from datetime import datetime
-from typing import Any
 
 from config import settings
 from src.llm.client import get_llm
@@ -265,7 +264,6 @@ async def rebuild_active_index() -> None:
     import numpy as np
 
     from src.rag import retriever
-    from src.rag.vector_store import VectorStore
 
     # 1) 基础库（首次从当前索引快照，之后读快照）
     base_vec_path = settings.PROCESSED_DATA_DIR / "base_vectors.npz"
@@ -330,7 +328,6 @@ async def _kb_count_async() -> int:
 # ---------------- 管理端增强功能（参考 Langchain-Chatchat/Dify 的 KB 管理） ----------------
 async def stats() -> dict:
     """知识库统计：文档数、知识块、分类分布、基础库 vs KB 占比。"""
-    import numpy as np
 
     docs = await list_docs()
     active = [d for d in docs if d["status"] == "active"]
@@ -356,10 +353,11 @@ async def stats() -> dict:
     }
 
 
-async def query_test(query: str, top_k: int = 5, mode: str = "dense_first") -> list[dict]:
+async def query_test(query: str, top_k: int = 5, mode: str = "dense_first", log: bool = True) -> list[dict]:
     """检索命中测试：给定问题返回召回的检索块（含相似度/来源/是否 KB），并记录检索日志。
 
     mode: dense_first（Dense优先融合，主链路）| rrf（RRF融合）| bm25（纯关键词）| dense（纯向量）。
+    log=False 用于批量评估，避免污染检索历史。
     """
     from src.rag.retriever import bm25_search, catalog_context, dense_search, is_catalog_query, retrieve_context
 
@@ -388,6 +386,55 @@ async def query_test(query: str, top_k: int = 5, mode: str = "dense_first") -> l
     ]
     await _log_query_test(query, mode, top_k, out)
     return out
+
+
+# ---------------- 检索评估报表（四模式 recall 对比，借鉴 Dify 检索评测） ----------------
+_RETRIEVAL_MODES = ("dense_first", "rrf", "dense", "bm25")
+
+
+async def retrieval_report(limit: int = 100, modes: tuple[str, ...] = _RETRIEVAL_MODES) -> dict:
+    """对检索评估对跑各模式命中测试，输出 recall@3/recall@5、平均分、平均延迟。
+
+    检索对来源：eval/retrieval_pairs.json（scripts/gen_retrieval_pairs.py 生成；
+    缺失时现场生成）。expected 命中 = 任一召回块的 source ∈ expected。
+    """
+    import time
+
+    from scripts.gen_retrieval_pairs import build_pairs
+
+    pairs_path = settings.EVAL_DIR / "retrieval_pairs.json"
+    if pairs_path.exists():
+        pairs = json.loads(pairs_path.read_text(encoding="utf-8"))
+    else:
+        pairs = build_pairs()
+    pairs = pairs[:limit] if limit else pairs
+    if not pairs:
+        return {"pairs": 0, "modes": {}}
+
+    report: dict = {"pairs": len(pairs), "generated_at": datetime.now().isoformat(timespec="seconds"),
+                    "modes": {}}
+    for mode in modes:
+        hit3 = hit5 = 0
+        score_sum = 0.0
+        lat_sum = 0.0
+        for p in pairs:
+            t0 = time.perf_counter()
+            hits = await query_test(p["query"], top_k=5, mode=mode, log=False)
+            lat_sum += (time.perf_counter() - t0) * 1000
+            sources = {h["source"] for h in hits}
+            expected = set(p.get("expected", []))
+            hit3 += bool(hits[:3] and (sources & expected))
+            hit5 += bool(sources & expected)
+            if hits:
+                score_sum += max(h.get("dense_score") or 0.0 for h in hits)
+        n = len(pairs)
+        report["modes"][mode] = {
+            "recall_at_3": round(hit3 / n, 3),
+            "recall_at_5": round(hit5 / n, 3),
+            "avg_top_dense_score": round(score_sum / n, 3),
+            "avg_latency_ms": round(lat_sum / n, 1),
+        }
+    return report
 
 
 async def _log_query_test(query: str, mode: str, top_k: int, hits: list[dict]) -> None:

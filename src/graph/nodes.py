@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import logging
 
-from config import settings
 from src.agents.router import route
 from src.emotion.detector import classify_rule
 from src.rag.retriever import catalog_context, is_catalog_query, retrieve_context

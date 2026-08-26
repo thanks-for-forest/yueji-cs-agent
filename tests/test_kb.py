@@ -73,8 +73,30 @@ def test_chunk_text_custom_strategy():
     assert len(cs_big) == 1 or len(cs_big) >= 1
 
 
+def test_retrieval_pairs_generation():
+    """检索评估对自动生成：覆盖产品/FAQ/政策，期望来源存在于分块库。（无索引环境跳过）"""
+    import json as _json
+
+    from config import settings as _settings
+
+    if not (_settings.PROCESSED_DATA_DIR / "base_chunks.json").exists():
+        pytest.skip("无基础索引（离线环境），跳过检索对校验")
+    from scripts.gen_retrieval_pairs import build_pairs
+
+    pairs = build_pairs()
+    assert len(pairs) >= 250
+    assert {p["category"] for p in pairs} == {"product", "faq", "policy"}
+    chunks = _json.loads((_settings.PROCESSED_DATA_DIR / "base_chunks.json").read_text(encoding="utf-8"))
+    sources = {c["meta"].get("source") for c in chunks}
+    for p in pairs[:50]:
+        assert p["expected"][0] in sources
+    # 查询非空且带完整信息
+    assert all(p["query"].strip() for p in pairs)
+
+
+@pytest.mark.integration
 def test_kb_flow_upload_approve_rollback():
-    """端到端：上传待审核 → 审核后可检索 → 回滚后失效。"""
+    """端到端：上传待审核 → 审核后可检索 → 回滚后失效。（依赖真实向量库）"""
 
     async def t():
         await init_db()
@@ -108,6 +130,7 @@ def test_kb_flow_upload_approve_rollback():
     asyncio.run(t())
 
 
+@pytest.mark.integration
 def test_kb_upload_respects_chunk_strategy():
     """上传携带分块策略参数时生效（记录在返回中）。"""
     from src.kb.service import upload_document
@@ -130,6 +153,7 @@ def test_kb_upload_respects_chunk_strategy():
     asyncio.run(t())
 
 
+@pytest.mark.integration
 def test_kb_rechunk_and_index_status():
     """重新分块按策略生效；索引健康检查返回一致且健康。"""
     from src.kb.service import get_index_status, rechunk_doc, upload_document
@@ -155,6 +179,7 @@ def test_kb_rechunk_and_index_status():
     asyncio.run(t())
 
 
+@pytest.mark.integration
 def test_kb_query_test_modes_and_export():
     """命中测试模式对照可用；导出 json/md 含文档内容。"""
     from src.kb.service import export_kb, query_test, upload_document

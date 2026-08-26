@@ -73,6 +73,10 @@ async def get_conn() -> aiosqlite.Connection:
         _conn = await aiosqlite.connect(settings.DB_PATH)
         _conn.row_factory = aiosqlite.Row
         async with _lock:
+            # 并发健壮性：WAL 允许读写并发（聊天写入 vs KB 索引重建），busy_timeout 避免锁等待即失败
+            await _conn.execute("PRAGMA journal_mode=WAL")
+            await _conn.execute("PRAGMA busy_timeout=5000")
+            await _conn.execute("PRAGMA synchronous=NORMAL")
             await _conn.executescript(SCHEMA)
             await _conn.commit()
     return _conn

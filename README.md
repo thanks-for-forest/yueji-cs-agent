@@ -6,14 +6,15 @@
 覆盖商品咨询 · 订单查询 · 退换货 · 护肤推荐 四大场景
 **多页面 + 独立后台**：客服端三页面 `/portal`（门户·营销风）· `/login` 登录/注册 · `/user` 用户专属客服（侧栏含我的会话/订单）；**管理后台为独立子应用**（`:8502`，深色管理风）
 
-![Python](https://img.shields.io/badge/Python-3.14-3776AB)
+![Python](https://img.shields.io/badge/Python-3.12%2F3.14-3776AB)
 ![LangGraph](https://img.shields.io/badge/LangGraph-Supervisor--Worker-7c9cff)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.141-009688)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.62-FF4B4B)
 ![DeepSeek](https://img.shields.io/badge/LLM-DeepSeek-4D6BFE)
 ![RAG](https://img.shields.io/badge/RAG-Dense%2BBM25%20dense--first-64ffda)
 ![Eval](https://img.shields.io/badge/评测-100%25%20(100%2F100)-28a745)
-![Tests](https://img.shields.io/badge/Tests-50%20passed-28a745)
+![Tests](https://img.shields.io/badge/Tests-83%20passed-28a745)
+![CI](https://img.shields.io/github/actions/workflow/status/thanks-for-forest/yueji-cs-agent/ci.yml?branch=main)
 ![License](https://img.shields.io/badge/License-MIT-8892b0)
 
 </div>
@@ -64,14 +65,18 @@ streamlit run frontend/admin_app.py --server.port 8502   # 管理后台 http://l
 ## 🧪 评测体系（双轨：确定性断言 + LLM-as-Judge）
 
 ```bash
-python -m pytest tests/ -q                  # 50 项单元测试（含 LangGraph/追踪测试）
+python -m pytest tests/ -q                  # 83 项测试；无 LLM/Ollama 环境跑离线子集：pytest -m "not integration"（73 项）
 python -m eval.evaluate                     # 100 条测试集双轨评测（走 LangGraph 路径）
+python -m scripts.gen_retrieval_pairs       # 生成 267 条检索评估对（后台「检索评估报表」用）
 python -m scripts.compare_retrieval         # 检索四策略对比 → docs/检索策略对比报告.md
 python -m scripts.trace_report --html       # 自研可观测性报告 + HTML 看板
 python -m scripts.stress_test --concurrency 50
+python -m scripts.cleanup --dry-run         # 运维清理（检索日志/过期令牌/追踪/评测报告保留期）
 ```
 
-**最终评测（100 条测试集，[完整报告](eval/reports/20260826_121627_report.md)）**：
+**持续集成**：GitHub Actions（`.github/workflows/ci.yml`）自动跑 ruff 正确性检查 + 离线测试子集（73 项，无需 DeepSeek/Ollama）+ 模块导入冒烟；离线测试通过 `tests/fake_llm.py` 注入确定性假 LLM。
+
+**最终评测（100 条测试集，[完整报告](eval/reports/20260826_201904_report.md)）**：
 
 | 指标 | 结果 | 目标 |
 |------|------|------|

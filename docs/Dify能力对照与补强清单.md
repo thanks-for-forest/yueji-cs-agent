@@ -54,5 +54,5 @@
 
 1. **watch 目录定时入库**（Dify 数据源同步的轻量版）：`scripts/kb_watch.py` 监控指定目录，新文件自动解析入库为待审核。
 2. **父子分段**：chunk_text 输出 child 块 + 保留 parent 摘要块，检索命中 child 回 parent 上下文。
-3. **检索评测内置**：把 eval 的检索对（query→期望 source）接入后台「检索命中率报表」，对比 dense_first/rrf/bm25 四模式指标。
+3. ~~**检索评测内置**~~ ✅ 已落地（2026-08-26）：`scripts/gen_retrieval_pairs.py` 自动派生 267 条检索对，管理后台「检索评估报表」一键跑四模式 recall@3/recall@5/延迟对比。
 4. **PPTX 解析**：python-pptx 逐页取文本。

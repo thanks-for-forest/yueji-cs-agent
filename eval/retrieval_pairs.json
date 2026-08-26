@@ -1,0 +1,2138 @@
+[
+ {
+  "query": "氨基酸温和洁面乳多少钱，功效怎么样",
+  "expected": [
+   "P001"
+  ],
+  "category": "product",
+  "id": "prod-P001-main"
+ },
+ {
+  "query": "净澈控油洁面啫喱多少钱，功效怎么样",
+  "expected": [
+   "P002"
+  ],
+  "category": "product",
+  "id": "prod-P002-main"
+ },
+ {
+  "query": "烟酰胺焕亮洁面膏多少钱，功效怎么样",
+  "expected": [
+   "P003"
+  ],
+  "category": "product",
+  "id": "prod-P003-main"
+ },
+ {
+  "query": "水杨酸祛痘洁面乳多少钱，功效怎么样",
+  "expected": [
+   "P004"
+  ],
+  "category": "product",
+  "id": "prod-P004-main"
+ },
+ {
+  "query": "积雪草舒缓洁面泡沫多少钱，功效怎么样",
+  "expected": [
+   "P005"
+  ],
+  "category": "product",
+  "id": "prod-P005-main"
+ },
+ {
+  "query": "玻尿酸保湿洁面乳多少钱，功效怎么样",
+  "expected": [
+   "P006"
+  ],
+  "category": "product",
+  "id": "prod-P006-main"
+ },
+ {
+  "query": "茶多酚净化洁面泥多少钱，功效怎么样",
+  "expected": [
+   "P007"
+  ],
+  "category": "product",
+  "id": "prod-P007-main"
+ },
+ {
+  "query": "温和卸妆洁面二合一多少钱，功效怎么样",
+  "expected": [
+   "P008"
+  ],
+  "category": "product",
+  "id": "prod-P008-main"
+ },
+ {
+  "query": "美白透亮洁面乳多少钱，功效怎么样",
+  "expected": [
+   "P009"
+  ],
+  "category": "product",
+  "id": "prod-P009-main"
+ },
+ {
+  "query": "男士控油清爽洁面多少钱，功效怎么样",
+  "expected": [
+   "P010"
+  ],
+  "category": "product",
+  "id": "prod-P010-main"
+ },
+ {
+  "query": "烟酰胺焕亮精华液多少钱，功效怎么样",
+  "expected": [
+   "P011"
+  ],
+  "category": "product",
+  "id": "prod-P011-main"
+ },
+ {
+  "query": "玻尿酸保湿精华液多少钱，功效怎么样",
+  "expected": [
+   "P012"
+  ],
+  "category": "product",
+  "id": "prod-P012-main"
+ },
+ {
+  "query": "视黄醇抗皱精华多少钱，功效怎么样",
+  "expected": [
+   "P013"
+  ],
+  "category": "product",
+  "id": "prod-P013-main"
+ },
+ {
+  "query": "积雪草修护精华液多少钱，功效怎么样",
+  "expected": [
+   "P014"
+  ],
+  "category": "product",
+  "id": "prod-P014-main"
+ },
+ {
+  "query": "水杨酸净痘精华多少钱，功效怎么样",
+  "expected": [
+   "P015"
+  ],
+  "category": "product",
+  "id": "prod-P015-main"
+ },
+ {
+  "query": "维生素C焕肤精华多少钱，功效怎么样",
+  "expected": [
+   "P016"
+  ],
+  "category": "product",
+  "id": "prod-P016-main"
+ },
+ {
+  "query": "二裂酵母修护精华多少钱，功效怎么样",
+  "expected": [
+   "P017"
+  ],
+  "category": "product",
+  "id": "prod-P017-main"
+ },
+ {
+  "query": "神经酰胺屏障精华多少钱，功效怎么样",
+  "expected": [
+   "P018"
+  ],
+  "category": "product",
+  "id": "prod-P018-main"
+ },
+ {
+  "query": "虾青素抗氧化精华多少钱，功效怎么样",
+  "expected": [
+   "P019"
+  ],
+  "category": "product",
+  "id": "prod-P019-main"
+ },
+ {
+  "query": "多肽紧致精华液多少钱，功效怎么样",
+  "expected": [
+   "P020"
+  ],
+  "category": "product",
+  "id": "prod-P020-main"
+ },
+ {
+  "query": "玻尿酸水润水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P021"
+  ],
+  "category": "product",
+  "id": "prod-P021-main"
+ },
+ {
+  "query": "控油平衡水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P022"
+  ],
+  "category": "product",
+  "id": "prod-P022-main"
+ },
+ {
+  "query": "敏感肌舒缓水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P023"
+  ],
+  "category": "product",
+  "id": "prod-P023-main"
+ },
+ {
+  "query": "烟酰胺亮肤水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P024"
+  ],
+  "category": "product",
+  "id": "prod-P024-main"
+ },
+ {
+  "query": "积雪草修护水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P025"
+  ],
+  "category": "product",
+  "id": "prod-P025-main"
+ },
+ {
+  "query": "神经酰胺屏障水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P026"
+  ],
+  "category": "product",
+  "id": "prod-P026-main"
+ },
+ {
+  "query": "玫瑰精粹保湿水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P027"
+  ],
+  "category": "product",
+  "id": "prod-P027-main"
+ },
+ {
+  "query": "茶树祛痘水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P028"
+  ],
+  "category": "product",
+  "id": "prod-P028-main"
+ },
+ {
+  "query": "男士控油水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P029"
+  ],
+  "category": "product",
+  "id": "prod-P029-main"
+ },
+ {
+  "query": "胶原蛋白弹润水乳套装多少钱，功效怎么样",
+  "expected": [
+   "P030"
+  ],
+  "category": "product",
+  "id": "prod-P030-main"
+ },
+ {
+  "query": "玻尿酸保湿面霜多少钱，功效怎么样",
+  "expected": [
+   "P031"
+  ],
+  "category": "product",
+  "id": "prod-P031-main"
+ },
+ {
+  "query": "控油清爽凝霜多少钱，功效怎么样",
+  "expected": [
+   "P032"
+  ],
+  "category": "product",
+  "id": "prod-P032-main"
+ },
+ {
+  "query": "敏感肌修护霜多少钱，功效怎么样",
+  "expected": [
+   "P033"
+  ],
+  "category": "product",
+  "id": "prod-P033-main"
+ },
+ {
+  "query": "烟酰胺亮肤面霜多少钱，功效怎么样",
+  "expected": [
+   "P034"
+  ],
+  "category": "product",
+  "id": "prod-P034-main"
+ },
+ {
+  "query": "视黄醇抗皱晚霜多少钱，功效怎么样",
+  "expected": [
+   "P035"
+  ],
+  "category": "product",
+  "id": "prod-P035-main"
+ },
+ {
+  "query": "神经酰胺修护霜多少钱，功效怎么样",
+  "expected": [
+   "P036"
+  ],
+  "category": "product",
+  "id": "prod-P036-main"
+ },
+ {
+  "query": "清爽保湿啫喱霜多少钱，功效怎么样",
+  "expected": [
+   "P037"
+  ],
+  "category": "product",
+  "id": "prod-P037-main"
+ },
+ {
+  "query": "多肽紧致面霜多少钱，功效怎么样",
+  "expected": [
+   "P038"
+  ],
+  "category": "product",
+  "id": "prod-P038-main"
+ },
+ {
+  "query": "美白淡斑霜多少钱，功效怎么样",
+  "expected": [
+   "P039"
+  ],
+  "category": "product",
+  "id": "prod-P039-main"
+ },
+ {
+  "query": "男士保湿面霜多少钱，功效怎么样",
+  "expected": [
+   "P040"
+  ],
+  "category": "product",
+  "id": "prod-P040-main"
+ },
+ {
+  "query": "你们是什么品牌？",
+  "expected": [
+   "F001"
+  ],
+  "category": "faq",
+  "id": "faq-F001"
+ },
+ {
+  "query": "产品在哪里生产？",
+  "expected": [
+   "F002"
+  ],
+  "category": "faq",
+  "id": "faq-F002"
+ },
+ {
+  "query": "产品是正品吗？",
+  "expected": [
+   "F003"
+  ],
+  "category": "faq",
+  "id": "faq-F003"
+ },
+ {
+  "query": "如何联系人工客服？",
+  "expected": [
+   "F004"
+  ],
+  "category": "faq",
+  "id": "faq-F004"
+ },
+ {
+  "query": "你们支持什么付款方式？",
+  "expected": [
+   "F005"
+  ],
+  "category": "faq",
+  "id": "faq-F005"
+ },
+ {
+  "query": "有哪些发货渠道？",
+  "expected": [
+   "F006"
+  ],
+  "category": "faq",
+  "id": "faq-F006"
+ },
+ {
+  "query": "产品可以退换吗？",
+  "expected": [
+   "F007"
+  ],
+  "category": "faq",
+  "id": "faq-F007"
+ },
+ {
+  "query": "使用产品后过敏怎么办？",
+  "expected": [
+   "F008"
+  ],
+  "category": "faq",
+  "id": "faq-F008"
+ },
+ {
+  "query": "烟酰胺有什么作用？",
+  "expected": [
+   "F009"
+  ],
+  "category": "faq",
+  "id": "faq-F009"
+ },
+ {
+  "query": "烟酰胺需要建立耐受吗？",
+  "expected": [
+   "F010"
+  ],
+  "category": "faq",
+  "id": "faq-F010"
+ },
+ {
+  "query": "玻尿酸和透明质酸钠是同一个东西吗？",
+  "expected": [
+   "F011"
+  ],
+  "category": "faq",
+  "id": "faq-F011"
+ },
+ {
+  "query": "视黄醇（A醇）有什么注意事项？",
+  "expected": [
+   "F012"
+  ],
+  "category": "faq",
+  "id": "faq-F012"
+ },
+ {
+  "query": "水杨酸适合什么皮肤？",
+  "expected": [
+   "F013"
+  ],
+  "category": "faq",
+  "id": "faq-F013"
+ },
+ {
+  "query": "积雪草有什么功效？",
+  "expected": [
+   "F014"
+  ],
+  "category": "faq",
+  "id": "faq-F014"
+ },
+ {
+  "query": "神经酰胺的作用是什么？",
+  "expected": [
+   "F015"
+  ],
+  "category": "faq",
+  "id": "faq-F015"
+ },
+ {
+  "query": "维生素C白天能用吗？",
+  "expected": [
+   "F016"
+  ],
+  "category": "faq",
+  "id": "faq-F016"
+ },
+ {
+  "query": "成分表里有酒精吗？",
+  "expected": [
+   "F017"
+  ],
+  "category": "faq",
+  "id": "faq-F017"
+ },
+ {
+  "query": "孕妇可以用视黄醇吗？",
+  "expected": [
+   "F018"
+  ],
+  "category": "faq",
+  "id": "faq-F018"
+ },
+ {
+  "query": "成分表怎么看是否适合自己？",
+  "expected": [
+   "F019"
+  ],
+  "category": "faq",
+  "id": "faq-F019"
+ },
+ {
+  "query": "敏感肌可以用烟酰胺吗？",
+  "expected": [
+   "F020"
+  ],
+  "category": "faq",
+  "id": "faq-F020"
+ },
+ {
+  "query": "油皮需要补水吗？",
+  "expected": [
+   "F021"
+  ],
+  "category": "faq",
+  "id": "faq-F021"
+ },
+ {
+  "query": "祛痘产品多久见效？",
+  "expected": [
+   "F022"
+  ],
+  "category": "faq",
+  "id": "faq-F022"
+ },
+ {
+  "query": "美白产品多久见效？",
+  "expected": [
+   "F023"
+  ],
+  "category": "faq",
+  "id": "faq-F023"
+ },
+ {
+  "query": "精华和面霜可以一起用吗？",
+  "expected": [
+   "F024"
+  ],
+  "category": "faq",
+  "id": "faq-F024"
+ },
+ {
+  "query": "早C晚A是什么？",
+  "expected": [
+   "F025"
+  ],
+  "category": "faq",
+  "id": "faq-F025"
+ },
+ {
+  "query": "怎么判断自己是敏感肌？",
+  "expected": [
+   "F026"
+  ],
+  "category": "faq",
+  "id": "faq-F026"
+ },
+ {
+  "query": "护肤的正确步骤是什么？",
+  "expected": [
+   "F027"
+  ],
+  "category": "faq",
+  "id": "faq-F027"
+ },
+ {
+  "query": "精华液一次用多少？",
+  "expected": [
+   "F028"
+  ],
+  "category": "faq",
+  "id": "faq-F028"
+ },
+ {
+  "query": "面膜可以天天敷吗？",
+  "expected": [
+   "F029"
+  ],
+  "category": "faq",
+  "id": "faq-F029"
+ },
+ {
+  "query": "水乳套装先用水还是先乳？",
+  "expected": [
+   "F030"
+  ],
+  "category": "faq",
+  "id": "faq-F030"
+ },
+ {
+  "query": "洁面产品需要早晚都用吗？",
+  "expected": [
+   "F031"
+  ],
+  "category": "faq",
+  "id": "faq-F031"
+ },
+ {
+  "query": "护肤品开封后能用多久？",
+  "expected": [
+   "F032"
+  ],
+  "category": "faq",
+  "id": "faq-F032"
+ },
+ {
+  "query": "可以先涂防晒再涂面霜吗？",
+  "expected": [
+   "F033"
+  ],
+  "category": "faq",
+  "id": "faq-F033"
+ },
+ {
+  "query": "用完护肤品搓泥怎么办？",
+  "expected": [
+   "F034"
+  ],
+  "category": "faq",
+  "id": "faq-F034"
+ },
+ {
+  "query": "护肤品可以涂在眼周吗？",
+  "expected": [
+   "F035"
+  ],
+  "category": "faq",
+  "id": "faq-F035"
+ },
+ {
+  "query": "精华和原液有什么区别？",
+  "expected": [
+   "F036"
+  ],
+  "category": "faq",
+  "id": "faq-F036"
+ },
+ {
+  "query": "刷酸后需要停用其他护肤品吗？",
+  "expected": [
+   "F037"
+  ],
+  "category": "faq",
+  "id": "faq-F037"
+ },
+ {
+  "query": "护肤品要放冰箱保存吗？",
+  "expected": [
+   "F038"
+  ],
+  "category": "faq",
+  "id": "faq-F038"
+ },
+ {
+  "query": "如何查询我的订单？",
+  "expected": [
+   "F039"
+  ],
+  "category": "faq",
+  "id": "faq-F039"
+ },
+ {
+  "query": "下单后多久发货？",
+  "expected": [
+   "F040"
+  ],
+  "category": "faq",
+  "id": "faq-F040"
+ },
+ {
+  "query": "可以修改订单地址吗？",
+  "expected": [
+   "F041"
+  ],
+  "category": "faq",
+  "id": "faq-F041"
+ },
+ {
+  "query": "可以取消订单吗？",
+  "expected": [
+   "F042"
+  ],
+  "category": "faq",
+  "id": "faq-F042"
+ },
+ {
+  "query": "订单显示待付款怎么办？",
+  "expected": [
+   "F043"
+  ],
+  "category": "faq",
+  "id": "faq-F043"
+ },
+ {
+  "query": "下单后没有收到短信怎么办？",
+  "expected": [
+   "F044"
+  ],
+  "category": "faq",
+  "id": "faq-F044"
+ },
+ {
+  "query": "怎么开发票？",
+  "expected": [
+   "F045"
+  ],
+  "category": "faq",
+  "id": "faq-F045"
+ },
+ {
+  "query": "可以合并订单发货吗？",
+  "expected": [
+   "F046"
+  ],
+  "category": "faq",
+  "id": "faq-F046"
+ },
+ {
+  "query": "订单被拆分发货是怎么回事？",
+  "expected": [
+   "F047"
+  ],
+  "category": "faq",
+  "id": "faq-F047"
+ },
+ {
+  "query": "怎么确认收货？",
+  "expected": [
+   "F048"
+  ],
+  "category": "faq",
+  "id": "faq-F048"
+ },
+ {
+  "query": "优惠券下单后可以补用吗？",
+  "expected": [
+   "F049"
+  ],
+  "category": "faq",
+  "id": "faq-F049"
+ },
+ {
+  "query": "下单时忘记用积分了怎么办？",
+  "expected": [
+   "F050"
+  ],
+  "category": "faq",
+  "id": "faq-F050"
+ },
+ {
+  "query": "可以用两个账号下单吗？",
+  "expected": [
+   "F051"
+  ],
+  "category": "faq",
+  "id": "faq-F051"
+ },
+ {
+  "query": "订单里的赠品没收到怎么办？",
+  "expected": [
+   "F052"
+  ],
+  "category": "faq",
+  "id": "faq-F052"
+ },
+ {
+  "query": "购买多件会有优惠吗？",
+  "expected": [
+   "F053"
+  ],
+  "category": "faq",
+  "id": "faq-F053"
+ },
+ {
+  "query": "订单状态有哪些？",
+  "expected": [
+   "F054"
+  ],
+  "category": "faq",
+  "id": "faq-F054"
+ },
+ {
+  "query": "收货后发现少件怎么办？",
+  "expected": [
+   "F055"
+  ],
+  "category": "faq",
+  "id": "faq-F055"
+ },
+ {
+  "query": "订单可以指定快递吗？",
+  "expected": [
+   "F056"
+  ],
+  "category": "faq",
+  "id": "faq-F056"
+ },
+ {
+  "query": "快递一般几天能到？",
+  "expected": [
+   "F057"
+  ],
+  "category": "faq",
+  "id": "faq-F057"
+ },
+ {
+  "query": "怎么查物流？",
+  "expected": [
+   "F058"
+  ],
+  "category": "faq",
+  "id": "faq-F058"
+ },
+ {
+  "query": "物流好几天不更新怎么办？",
+  "expected": [
+   "F059"
+  ],
+  "category": "faq",
+  "id": "faq-F059"
+ },
+ {
+  "query": "可以改快递地址吗？",
+  "expected": [
+   "F060"
+  ],
+  "category": "faq",
+  "id": "faq-F060"
+ },
+ {
+  "query": "快递显示签收但我没收到怎么办？",
+  "expected": [
+   "F061"
+  ],
+  "category": "faq",
+  "id": "faq-F061"
+ },
+ {
+  "query": "快递到了可以放快递柜吗？",
+  "expected": [
+   "F062"
+  ],
+  "category": "faq",
+  "id": "faq-F062"
+ },
+ {
+  "query": "大促期间物流会慢吗？",
+  "expected": [
+   "F063"
+  ],
+  "category": "faq",
+  "id": "faq-F063"
+ },
+ {
+  "query": "可以加急发货吗？",
+  "expected": [
+   "F064"
+  ],
+  "category": "faq",
+  "id": "faq-F064"
+ },
+ {
+  "query": "为什么有两个物流单号？",
+  "expected": [
+   "F065"
+  ],
+  "category": "faq",
+  "id": "faq-F065"
+ },
+ {
+  "query": "偏远地区多久能到？",
+  "expected": [
+   "F066"
+  ],
+  "category": "faq",
+  "id": "faq-F066"
+ },
+ {
+  "query": "物流显示拒收是怎么回事？",
+  "expected": [
+   "F067"
+  ],
+  "category": "faq",
+  "id": "faq-F067"
+ },
+ {
+  "query": "可以拦截快递吗？",
+  "expected": [
+   "F068"
+  ],
+  "category": "faq",
+  "id": "faq-F068"
+ },
+ {
+  "query": "快递被退回怎么办？",
+  "expected": [
+   "F069"
+  ],
+  "category": "faq",
+  "id": "faq-F069"
+ },
+ {
+  "query": "节假日发货吗？",
+  "expected": [
+   "F070"
+  ],
+  "category": "faq",
+  "id": "faq-F070"
+ },
+ {
+  "query": "支持七天无理由退换吗？",
+  "expected": [
+   "F071"
+  ],
+  "category": "faq",
+  "id": "faq-F071"
+ },
+ {
+  "query": "退货流程是怎样的？",
+  "expected": [
+   "F072"
+  ],
+  "category": "faq",
+  "id": "faq-F072"
+ },
+ {
+  "query": "质量问题怎么处理？",
+  "expected": [
+   "F073"
+  ],
+  "category": "faq",
+  "id": "faq-F073"
+ },
+ {
+  "query": "错发漏发怎么处理？",
+  "expected": [
+   "F074"
+  ],
+  "category": "faq",
+  "id": "faq-F074"
+ },
+ {
+  "query": "退货的运费谁承担？",
+  "expected": [
+   "F075"
+  ],
+  "category": "faq",
+  "id": "faq-F075"
+ },
+ {
+  "query": "退货多久能收到退款？",
+  "expected": [
+   "F076"
+  ],
+  "category": "faq",
+  "id": "faq-F076"
+ },
+ {
+  "query": "退货需要寄回赠品吗？",
+  "expected": [
+   "F077"
+  ],
+  "category": "faq",
+  "id": "faq-F077"
+ },
+ {
+  "query": "可以换货吗？",
+  "expected": [
+   "F078"
+  ],
+  "category": "faq",
+  "id": "faq-F078"
+ },
+ {
+  "query": "已经使用过的商品可以退吗？",
+  "expected": [
+   "F079"
+  ],
+  "category": "faq",
+  "id": "faq-F079"
+ },
+ {
+  "query": "可以仅退款不退货吗？",
+  "expected": [
+   "F080"
+  ],
+  "category": "faq",
+  "id": "faq-F080"
+ },
+ {
+  "query": "退款到哪里？",
+  "expected": [
+   "F081"
+  ],
+  "category": "faq",
+  "id": "faq-F081"
+ },
+ {
+  "query": "超过7天还能退吗？",
+  "expected": [
+   "F082"
+  ],
+  "category": "faq",
+  "id": "faq-F082"
+ },
+ {
+  "query": "商品破损怎么申请售后？",
+  "expected": [
+   "F083"
+  ],
+  "category": "faq",
+  "id": "faq-F083"
+ },
+ {
+  "query": "售后审核需要多久？",
+  "expected": [
+   "F084"
+  ],
+  "category": "faq",
+  "id": "faq-F084"
+ },
+ {
+  "query": "怎么投诉？",
+  "expected": [
+   "F085"
+  ],
+  "category": "faq",
+  "id": "faq-F085"
+ },
+ {
+  "query": "退货影响下次购买吗？",
+  "expected": [
+   "F086"
+  ],
+  "category": "faq",
+  "id": "faq-F086"
+ },
+ {
+  "query": "换货运费谁承担？",
+  "expected": [
+   "F087"
+  ],
+  "category": "faq",
+  "id": "faq-F087"
+ },
+ {
+  "query": "售后申请在哪里提交？",
+  "expected": [
+   "F088"
+  ],
+  "category": "faq",
+  "id": "faq-F088"
+ },
+ {
+  "query": "海外可以退货吗？",
+  "expected": [
+   "F089"
+  ],
+  "category": "faq",
+  "id": "faq-F089"
+ },
+ {
+  "query": "现在有什么优惠活动？",
+  "expected": [
+   "F090"
+  ],
+  "category": "faq",
+  "id": "faq-F090"
+ },
+ {
+  "query": "有会员制度吗？",
+  "expected": [
+   "F091"
+  ],
+  "category": "faq",
+  "id": "faq-F091"
+ },
+ {
+  "query": "积分有什么用？",
+  "expected": [
+   "F092"
+  ],
+  "category": "faq",
+  "id": "faq-F092"
+ },
+ {
+  "query": "可以领优惠券吗？",
+  "expected": [
+   "F093"
+  ],
+  "category": "faq",
+  "id": "faq-F093"
+ },
+ {
+  "query": "会员生日有优惠吗？",
+  "expected": [
+   "F094"
+  ],
+  "category": "faq",
+  "id": "faq-F094"
+ },
+ {
+  "query": "双11有什么活动？",
+  "expected": [
+   "F095"
+  ],
+  "category": "faq",
+  "id": "faq-F095"
+ },
+ {
+  "query": "有学生优惠吗？",
+  "expected": [
+   "F096"
+  ],
+  "category": "faq",
+  "id": "faq-F096"
+ },
+ {
+  "query": "优惠券过期了怎么办？",
+  "expected": [
+   "F097"
+  ],
+  "category": "faq",
+  "id": "faq-F097"
+ },
+ {
+  "query": "氨基酸温和洁面乳怎么用？",
+  "expected": [
+   "F098"
+  ],
+  "category": "faq",
+  "id": "faq-F098"
+ },
+ {
+  "query": "氨基酸温和洁面乳适合什么肤质？",
+  "expected": [
+   "F099"
+  ],
+  "category": "faq",
+  "id": "faq-F099"
+ },
+ {
+  "query": "氨基酸温和洁面乳有什么注意事项？",
+  "expected": [
+   "F100"
+  ],
+  "category": "faq",
+  "id": "faq-F100"
+ },
+ {
+  "query": "净澈控油洁面啫喱怎么用？",
+  "expected": [
+   "F101"
+  ],
+  "category": "faq",
+  "id": "faq-F101"
+ },
+ {
+  "query": "净澈控油洁面啫喱适合什么肤质？",
+  "expected": [
+   "F102"
+  ],
+  "category": "faq",
+  "id": "faq-F102"
+ },
+ {
+  "query": "净澈控油洁面啫喱有什么注意事项？",
+  "expected": [
+   "F103"
+  ],
+  "category": "faq",
+  "id": "faq-F103"
+ },
+ {
+  "query": "烟酰胺焕亮洁面膏怎么用？",
+  "expected": [
+   "F104"
+  ],
+  "category": "faq",
+  "id": "faq-F104"
+ },
+ {
+  "query": "烟酰胺焕亮洁面膏适合什么肤质？",
+  "expected": [
+   "F105"
+  ],
+  "category": "faq",
+  "id": "faq-F105"
+ },
+ {
+  "query": "烟酰胺焕亮洁面膏有什么注意事项？",
+  "expected": [
+   "F106"
+  ],
+  "category": "faq",
+  "id": "faq-F106"
+ },
+ {
+  "query": "水杨酸祛痘洁面乳怎么用？",
+  "expected": [
+   "F107"
+  ],
+  "category": "faq",
+  "id": "faq-F107"
+ },
+ {
+  "query": "水杨酸祛痘洁面乳适合什么肤质？",
+  "expected": [
+   "F108"
+  ],
+  "category": "faq",
+  "id": "faq-F108"
+ },
+ {
+  "query": "水杨酸祛痘洁面乳有什么注意事项？",
+  "expected": [
+   "F109"
+  ],
+  "category": "faq",
+  "id": "faq-F109"
+ },
+ {
+  "query": "积雪草舒缓洁面泡沫怎么用？",
+  "expected": [
+   "F110"
+  ],
+  "category": "faq",
+  "id": "faq-F110"
+ },
+ {
+  "query": "积雪草舒缓洁面泡沫适合什么肤质？",
+  "expected": [
+   "F111"
+  ],
+  "category": "faq",
+  "id": "faq-F111"
+ },
+ {
+  "query": "积雪草舒缓洁面泡沫有什么注意事项？",
+  "expected": [
+   "F112"
+  ],
+  "category": "faq",
+  "id": "faq-F112"
+ },
+ {
+  "query": "玻尿酸保湿洁面乳怎么用？",
+  "expected": [
+   "F113"
+  ],
+  "category": "faq",
+  "id": "faq-F113"
+ },
+ {
+  "query": "玻尿酸保湿洁面乳适合什么肤质？",
+  "expected": [
+   "F114"
+  ],
+  "category": "faq",
+  "id": "faq-F114"
+ },
+ {
+  "query": "玻尿酸保湿洁面乳有什么注意事项？",
+  "expected": [
+   "F115"
+  ],
+  "category": "faq",
+  "id": "faq-F115"
+ },
+ {
+  "query": "茶多酚净化洁面泥怎么用？",
+  "expected": [
+   "F116"
+  ],
+  "category": "faq",
+  "id": "faq-F116"
+ },
+ {
+  "query": "茶多酚净化洁面泥适合什么肤质？",
+  "expected": [
+   "F117"
+  ],
+  "category": "faq",
+  "id": "faq-F117"
+ },
+ {
+  "query": "茶多酚净化洁面泥有什么注意事项？",
+  "expected": [
+   "F118"
+  ],
+  "category": "faq",
+  "id": "faq-F118"
+ },
+ {
+  "query": "温和卸妆洁面二合一怎么用？",
+  "expected": [
+   "F119"
+  ],
+  "category": "faq",
+  "id": "faq-F119"
+ },
+ {
+  "query": "温和卸妆洁面二合一适合什么肤质？",
+  "expected": [
+   "F120"
+  ],
+  "category": "faq",
+  "id": "faq-F120"
+ },
+ {
+  "query": "温和卸妆洁面二合一有什么注意事项？",
+  "expected": [
+   "F121"
+  ],
+  "category": "faq",
+  "id": "faq-F121"
+ },
+ {
+  "query": "美白透亮洁面乳怎么用？",
+  "expected": [
+   "F122"
+  ],
+  "category": "faq",
+  "id": "faq-F122"
+ },
+ {
+  "query": "美白透亮洁面乳适合什么肤质？",
+  "expected": [
+   "F123"
+  ],
+  "category": "faq",
+  "id": "faq-F123"
+ },
+ {
+  "query": "美白透亮洁面乳有什么注意事项？",
+  "expected": [
+   "F124"
+  ],
+  "category": "faq",
+  "id": "faq-F124"
+ },
+ {
+  "query": "男士控油清爽洁面怎么用？",
+  "expected": [
+   "F125"
+  ],
+  "category": "faq",
+  "id": "faq-F125"
+ },
+ {
+  "query": "男士控油清爽洁面适合什么肤质？",
+  "expected": [
+   "F126"
+  ],
+  "category": "faq",
+  "id": "faq-F126"
+ },
+ {
+  "query": "男士控油清爽洁面有什么注意事项？",
+  "expected": [
+   "F127"
+  ],
+  "category": "faq",
+  "id": "faq-F127"
+ },
+ {
+  "query": "烟酰胺焕亮精华液怎么用？",
+  "expected": [
+   "F128"
+  ],
+  "category": "faq",
+  "id": "faq-F128"
+ },
+ {
+  "query": "烟酰胺焕亮精华液适合什么肤质？",
+  "expected": [
+   "F129"
+  ],
+  "category": "faq",
+  "id": "faq-F129"
+ },
+ {
+  "query": "烟酰胺焕亮精华液有什么注意事项？",
+  "expected": [
+   "F130"
+  ],
+  "category": "faq",
+  "id": "faq-F130"
+ },
+ {
+  "query": "玻尿酸保湿精华液怎么用？",
+  "expected": [
+   "F131"
+  ],
+  "category": "faq",
+  "id": "faq-F131"
+ },
+ {
+  "query": "玻尿酸保湿精华液适合什么肤质？",
+  "expected": [
+   "F132"
+  ],
+  "category": "faq",
+  "id": "faq-F132"
+ },
+ {
+  "query": "玻尿酸保湿精华液有什么注意事项？",
+  "expected": [
+   "F133"
+  ],
+  "category": "faq",
+  "id": "faq-F133"
+ },
+ {
+  "query": "视黄醇抗皱精华怎么用？",
+  "expected": [
+   "F134"
+  ],
+  "category": "faq",
+  "id": "faq-F134"
+ },
+ {
+  "query": "视黄醇抗皱精华适合什么肤质？",
+  "expected": [
+   "F135"
+  ],
+  "category": "faq",
+  "id": "faq-F135"
+ },
+ {
+  "query": "视黄醇抗皱精华有什么注意事项？",
+  "expected": [
+   "F136"
+  ],
+  "category": "faq",
+  "id": "faq-F136"
+ },
+ {
+  "query": "积雪草修护精华液怎么用？",
+  "expected": [
+   "F137"
+  ],
+  "category": "faq",
+  "id": "faq-F137"
+ },
+ {
+  "query": "积雪草修护精华液适合什么肤质？",
+  "expected": [
+   "F138"
+  ],
+  "category": "faq",
+  "id": "faq-F138"
+ },
+ {
+  "query": "积雪草修护精华液有什么注意事项？",
+  "expected": [
+   "F139"
+  ],
+  "category": "faq",
+  "id": "faq-F139"
+ },
+ {
+  "query": "水杨酸净痘精华怎么用？",
+  "expected": [
+   "F140"
+  ],
+  "category": "faq",
+  "id": "faq-F140"
+ },
+ {
+  "query": "水杨酸净痘精华适合什么肤质？",
+  "expected": [
+   "F141"
+  ],
+  "category": "faq",
+  "id": "faq-F141"
+ },
+ {
+  "query": "水杨酸净痘精华有什么注意事项？",
+  "expected": [
+   "F142"
+  ],
+  "category": "faq",
+  "id": "faq-F142"
+ },
+ {
+  "query": "维生素C焕肤精华怎么用？",
+  "expected": [
+   "F143"
+  ],
+  "category": "faq",
+  "id": "faq-F143"
+ },
+ {
+  "query": "维生素C焕肤精华适合什么肤质？",
+  "expected": [
+   "F144"
+  ],
+  "category": "faq",
+  "id": "faq-F144"
+ },
+ {
+  "query": "维生素C焕肤精华有什么注意事项？",
+  "expected": [
+   "F145"
+  ],
+  "category": "faq",
+  "id": "faq-F145"
+ },
+ {
+  "query": "二裂酵母修护精华怎么用？",
+  "expected": [
+   "F146"
+  ],
+  "category": "faq",
+  "id": "faq-F146"
+ },
+ {
+  "query": "二裂酵母修护精华适合什么肤质？",
+  "expected": [
+   "F147"
+  ],
+  "category": "faq",
+  "id": "faq-F147"
+ },
+ {
+  "query": "二裂酵母修护精华有什么注意事项？",
+  "expected": [
+   "F148"
+  ],
+  "category": "faq",
+  "id": "faq-F148"
+ },
+ {
+  "query": "神经酰胺屏障精华怎么用？",
+  "expected": [
+   "F149"
+  ],
+  "category": "faq",
+  "id": "faq-F149"
+ },
+ {
+  "query": "神经酰胺屏障精华适合什么肤质？",
+  "expected": [
+   "F150"
+  ],
+  "category": "faq",
+  "id": "faq-F150"
+ },
+ {
+  "query": "神经酰胺屏障精华有什么注意事项？",
+  "expected": [
+   "F151"
+  ],
+  "category": "faq",
+  "id": "faq-F151"
+ },
+ {
+  "query": "虾青素抗氧化精华怎么用？",
+  "expected": [
+   "F152"
+  ],
+  "category": "faq",
+  "id": "faq-F152"
+ },
+ {
+  "query": "虾青素抗氧化精华适合什么肤质？",
+  "expected": [
+   "F153"
+  ],
+  "category": "faq",
+  "id": "faq-F153"
+ },
+ {
+  "query": "虾青素抗氧化精华有什么注意事项？",
+  "expected": [
+   "F154"
+  ],
+  "category": "faq",
+  "id": "faq-F154"
+ },
+ {
+  "query": "多肽紧致精华液怎么用？",
+  "expected": [
+   "F155"
+  ],
+  "category": "faq",
+  "id": "faq-F155"
+ },
+ {
+  "query": "多肽紧致精华液适合什么肤质？",
+  "expected": [
+   "F156"
+  ],
+  "category": "faq",
+  "id": "faq-F156"
+ },
+ {
+  "query": "多肽紧致精华液有什么注意事项？",
+  "expected": [
+   "F157"
+  ],
+  "category": "faq",
+  "id": "faq-F157"
+ },
+ {
+  "query": "玻尿酸水润水乳套装怎么用？",
+  "expected": [
+   "F158"
+  ],
+  "category": "faq",
+  "id": "faq-F158"
+ },
+ {
+  "query": "玻尿酸水润水乳套装适合什么肤质？",
+  "expected": [
+   "F159"
+  ],
+  "category": "faq",
+  "id": "faq-F159"
+ },
+ {
+  "query": "玻尿酸水润水乳套装有什么注意事项？",
+  "expected": [
+   "F160"
+  ],
+  "category": "faq",
+  "id": "faq-F160"
+ },
+ {
+  "query": "控油平衡水乳套装怎么用？",
+  "expected": [
+   "F161"
+  ],
+  "category": "faq",
+  "id": "faq-F161"
+ },
+ {
+  "query": "控油平衡水乳套装适合什么肤质？",
+  "expected": [
+   "F162"
+  ],
+  "category": "faq",
+  "id": "faq-F162"
+ },
+ {
+  "query": "控油平衡水乳套装有什么注意事项？",
+  "expected": [
+   "F163"
+  ],
+  "category": "faq",
+  "id": "faq-F163"
+ },
+ {
+  "query": "敏感肌舒缓水乳套装怎么用？",
+  "expected": [
+   "F164"
+  ],
+  "category": "faq",
+  "id": "faq-F164"
+ },
+ {
+  "query": "敏感肌舒缓水乳套装适合什么肤质？",
+  "expected": [
+   "F165"
+  ],
+  "category": "faq",
+  "id": "faq-F165"
+ },
+ {
+  "query": "敏感肌舒缓水乳套装有什么注意事项？",
+  "expected": [
+   "F166"
+  ],
+  "category": "faq",
+  "id": "faq-F166"
+ },
+ {
+  "query": "烟酰胺亮肤水乳套装怎么用？",
+  "expected": [
+   "F167"
+  ],
+  "category": "faq",
+  "id": "faq-F167"
+ },
+ {
+  "query": "烟酰胺亮肤水乳套装适合什么肤质？",
+  "expected": [
+   "F168"
+  ],
+  "category": "faq",
+  "id": "faq-F168"
+ },
+ {
+  "query": "烟酰胺亮肤水乳套装有什么注意事项？",
+  "expected": [
+   "F169"
+  ],
+  "category": "faq",
+  "id": "faq-F169"
+ },
+ {
+  "query": "积雪草修护水乳套装怎么用？",
+  "expected": [
+   "F170"
+  ],
+  "category": "faq",
+  "id": "faq-F170"
+ },
+ {
+  "query": "积雪草修护水乳套装适合什么肤质？",
+  "expected": [
+   "F171"
+  ],
+  "category": "faq",
+  "id": "faq-F171"
+ },
+ {
+  "query": "积雪草修护水乳套装有什么注意事项？",
+  "expected": [
+   "F172"
+  ],
+  "category": "faq",
+  "id": "faq-F172"
+ },
+ {
+  "query": "神经酰胺屏障水乳套装怎么用？",
+  "expected": [
+   "F173"
+  ],
+  "category": "faq",
+  "id": "faq-F173"
+ },
+ {
+  "query": "神经酰胺屏障水乳套装适合什么肤质？",
+  "expected": [
+   "F174"
+  ],
+  "category": "faq",
+  "id": "faq-F174"
+ },
+ {
+  "query": "神经酰胺屏障水乳套装有什么注意事项？",
+  "expected": [
+   "F175"
+  ],
+  "category": "faq",
+  "id": "faq-F175"
+ },
+ {
+  "query": "玫瑰精粹保湿水乳套装怎么用？",
+  "expected": [
+   "F176"
+  ],
+  "category": "faq",
+  "id": "faq-F176"
+ },
+ {
+  "query": "玫瑰精粹保湿水乳套装适合什么肤质？",
+  "expected": [
+   "F177"
+  ],
+  "category": "faq",
+  "id": "faq-F177"
+ },
+ {
+  "query": "玫瑰精粹保湿水乳套装有什么注意事项？",
+  "expected": [
+   "F178"
+  ],
+  "category": "faq",
+  "id": "faq-F178"
+ },
+ {
+  "query": "茶树祛痘水乳套装怎么用？",
+  "expected": [
+   "F179"
+  ],
+  "category": "faq",
+  "id": "faq-F179"
+ },
+ {
+  "query": "茶树祛痘水乳套装适合什么肤质？",
+  "expected": [
+   "F180"
+  ],
+  "category": "faq",
+  "id": "faq-F180"
+ },
+ {
+  "query": "茶树祛痘水乳套装有什么注意事项？",
+  "expected": [
+   "F181"
+  ],
+  "category": "faq",
+  "id": "faq-F181"
+ },
+ {
+  "query": "男士控油水乳套装怎么用？",
+  "expected": [
+   "F182"
+  ],
+  "category": "faq",
+  "id": "faq-F182"
+ },
+ {
+  "query": "男士控油水乳套装适合什么肤质？",
+  "expected": [
+   "F183"
+  ],
+  "category": "faq",
+  "id": "faq-F183"
+ },
+ {
+  "query": "男士控油水乳套装有什么注意事项？",
+  "expected": [
+   "F184"
+  ],
+  "category": "faq",
+  "id": "faq-F184"
+ },
+ {
+  "query": "胶原蛋白弹润水乳套装怎么用？",
+  "expected": [
+   "F185"
+  ],
+  "category": "faq",
+  "id": "faq-F185"
+ },
+ {
+  "query": "胶原蛋白弹润水乳套装适合什么肤质？",
+  "expected": [
+   "F186"
+  ],
+  "category": "faq",
+  "id": "faq-F186"
+ },
+ {
+  "query": "胶原蛋白弹润水乳套装有什么注意事项？",
+  "expected": [
+   "F187"
+  ],
+  "category": "faq",
+  "id": "faq-F187"
+ },
+ {
+  "query": "玻尿酸保湿面霜怎么用？",
+  "expected": [
+   "F188"
+  ],
+  "category": "faq",
+  "id": "faq-F188"
+ },
+ {
+  "query": "玻尿酸保湿面霜适合什么肤质？",
+  "expected": [
+   "F189"
+  ],
+  "category": "faq",
+  "id": "faq-F189"
+ },
+ {
+  "query": "玻尿酸保湿面霜有什么注意事项？",
+  "expected": [
+   "F190"
+  ],
+  "category": "faq",
+  "id": "faq-F190"
+ },
+ {
+  "query": "控油清爽凝霜怎么用？",
+  "expected": [
+   "F191"
+  ],
+  "category": "faq",
+  "id": "faq-F191"
+ },
+ {
+  "query": "控油清爽凝霜适合什么肤质？",
+  "expected": [
+   "F192"
+  ],
+  "category": "faq",
+  "id": "faq-F192"
+ },
+ {
+  "query": "控油清爽凝霜有什么注意事项？",
+  "expected": [
+   "F193"
+  ],
+  "category": "faq",
+  "id": "faq-F193"
+ },
+ {
+  "query": "敏感肌修护霜怎么用？",
+  "expected": [
+   "F194"
+  ],
+  "category": "faq",
+  "id": "faq-F194"
+ },
+ {
+  "query": "敏感肌修护霜适合什么肤质？",
+  "expected": [
+   "F195"
+  ],
+  "category": "faq",
+  "id": "faq-F195"
+ },
+ {
+  "query": "敏感肌修护霜有什么注意事项？",
+  "expected": [
+   "F196"
+  ],
+  "category": "faq",
+  "id": "faq-F196"
+ },
+ {
+  "query": "烟酰胺亮肤面霜怎么用？",
+  "expected": [
+   "F197"
+  ],
+  "category": "faq",
+  "id": "faq-F197"
+ },
+ {
+  "query": "烟酰胺亮肤面霜适合什么肤质？",
+  "expected": [
+   "F198"
+  ],
+  "category": "faq",
+  "id": "faq-F198"
+ },
+ {
+  "query": "烟酰胺亮肤面霜有什么注意事项？",
+  "expected": [
+   "F199"
+  ],
+  "category": "faq",
+  "id": "faq-F199"
+ },
+ {
+  "query": "视黄醇抗皱晚霜怎么用？",
+  "expected": [
+   "F200"
+  ],
+  "category": "faq",
+  "id": "faq-F200"
+ },
+ {
+  "query": "视黄醇抗皱晚霜适合什么肤质？",
+  "expected": [
+   "F201"
+  ],
+  "category": "faq",
+  "id": "faq-F201"
+ },
+ {
+  "query": "视黄醇抗皱晚霜有什么注意事项？",
+  "expected": [
+   "F202"
+  ],
+  "category": "faq",
+  "id": "faq-F202"
+ },
+ {
+  "query": "神经酰胺修护霜怎么用？",
+  "expected": [
+   "F203"
+  ],
+  "category": "faq",
+  "id": "faq-F203"
+ },
+ {
+  "query": "神经酰胺修护霜适合什么肤质？",
+  "expected": [
+   "F204"
+  ],
+  "category": "faq",
+  "id": "faq-F204"
+ },
+ {
+  "query": "神经酰胺修护霜有什么注意事项？",
+  "expected": [
+   "F205"
+  ],
+  "category": "faq",
+  "id": "faq-F205"
+ },
+ {
+  "query": "清爽保湿啫喱霜怎么用？",
+  "expected": [
+   "F206"
+  ],
+  "category": "faq",
+  "id": "faq-F206"
+ },
+ {
+  "query": "清爽保湿啫喱霜适合什么肤质？",
+  "expected": [
+   "F207"
+  ],
+  "category": "faq",
+  "id": "faq-F207"
+ },
+ {
+  "query": "清爽保湿啫喱霜有什么注意事项？",
+  "expected": [
+   "F208"
+  ],
+  "category": "faq",
+  "id": "faq-F208"
+ },
+ {
+  "query": "多肽紧致面霜怎么用？",
+  "expected": [
+   "F209"
+  ],
+  "category": "faq",
+  "id": "faq-F209"
+ },
+ {
+  "query": "多肽紧致面霜适合什么肤质？",
+  "expected": [
+   "F210"
+  ],
+  "category": "faq",
+  "id": "faq-F210"
+ },
+ {
+  "query": "多肽紧致面霜有什么注意事项？",
+  "expected": [
+   "F211"
+  ],
+  "category": "faq",
+  "id": "faq-F211"
+ },
+ {
+  "query": "美白淡斑霜怎么用？",
+  "expected": [
+   "F212"
+  ],
+  "category": "faq",
+  "id": "faq-F212"
+ },
+ {
+  "query": "美白淡斑霜适合什么肤质？",
+  "expected": [
+   "F213"
+  ],
+  "category": "faq",
+  "id": "faq-F213"
+ },
+ {
+  "query": "美白淡斑霜有什么注意事项？",
+  "expected": [
+   "F214"
+  ],
+  "category": "faq",
+  "id": "faq-F214"
+ },
+ {
+  "query": "男士保湿面霜怎么用？",
+  "expected": [
+   "F215"
+  ],
+  "category": "faq",
+  "id": "faq-F215"
+ },
+ {
+  "query": "男士保湿面霜适合什么肤质？",
+  "expected": [
+   "F216"
+  ],
+  "category": "faq",
+  "id": "faq-F216"
+ },
+ {
+  "query": "男士保湿面霜有什么注意事项？",
+  "expected": [
+   "F217"
+  ],
+  "category": "faq",
+  "id": "faq-F217"
+ },
+ {
+  "query": "七天无理由怎么规定的",
+  "expected": [
+   "POL-1"
+  ],
+  "category": "policy",
+  "id": "policy-POL-1"
+ },
+ {
+  "query": "质量问题怎么规定的",
+  "expected": [
+   "POL-2"
+  ],
+  "category": "policy",
+  "id": "policy-POL-2"
+ },
+ {
+  "query": "错发漏发怎么规定的",
+  "expected": [
+   "POL-3"
+  ],
+  "category": "policy",
+  "id": "policy-POL-3"
+ },
+ {
+  "query": "换货怎么规定的",
+  "expected": [
+   "POL-4"
+  ],
+  "category": "policy",
+  "id": "policy-POL-4"
+ },
+ {
+  "query": "仅退款怎么规定的",
+  "expected": [
+   "POL-5"
+  ],
+  "category": "policy",
+  "id": "policy-POL-5"
+ },
+ {
+  "query": "物流时效怎么规定的",
+  "expected": [
+   "POL-6"
+  ],
+  "category": "policy",
+  "id": "policy-POL-6"
+ },
+ {
+  "query": "预售与发货怎么规定的",
+  "expected": [
+   "POL-7"
+  ],
+  "category": "policy",
+  "id": "policy-POL-7"
+ },
+ {
+  "query": "发票说明怎么规定的",
+  "expected": [
+   "POL-8"
+  ],
+  "category": "policy",
+  "id": "policy-POL-8"
+ },
+ {
+  "query": "会员积分怎么规定的",
+  "expected": [
+   "POL-9"
+  ],
+  "category": "policy",
+  "id": "policy-POL-9"
+ },
+ {
+  "query": "价格保护怎么规定的",
+  "expected": [
+   "POL-10"
+  ],
+  "category": "policy",
+  "id": "policy-POL-10"
+ }
+]

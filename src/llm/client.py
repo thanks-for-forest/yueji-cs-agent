@@ -29,6 +29,9 @@ def _count_llm_call() -> None:
 
 logger = logging.getLogger(__name__)
 
+# 可重试状态码：限流 / 服务端临时错误（4xx 客户端错误不重试——如参数错误、工具消息顺序问题）
+_RETRY_STATUS = {429, 500, 502, 503, 504}
+
 
 class LLMError(Exception):
     """LLM 调用最终失败（主备均失败）。"""
@@ -103,6 +106,82 @@ class LLMClient:
             self._clients[key] = httpx.AsyncClient(timeout=self._timeout)
         return self._clients[key]
 
+    # ---------------- 容错：指数退避重试 ----------------
+
+    async def _post_with_retry(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        *,
+        headers: dict | None = None,
+        json: dict | None = None,
+    ) -> httpx.Response:
+        """带重试的 POST：传输错误 / 429 / 5xx 指数退避重试，其余错误直接抛出。"""
+        last: Exception | None = None
+        for attempt in range(settings.LLM_RETRY_TIMES):
+            try:
+                resp = await client.post(url, headers=headers, json=json)
+                if resp.status_code in _RETRY_STATUS:
+                    last = LLMError(f"HTTP {resp.status_code}: {resp.text[:200]}")
+                    if attempt < settings.LLM_RETRY_TIMES - 1:
+                        await asyncio.sleep(settings.LLM_RETRY_BASE_DELAY * (2**attempt))
+                    continue
+                resp.raise_for_status()
+                return resp
+            except httpx.TransportError as e:
+                last = e
+                if attempt < settings.LLM_RETRY_TIMES - 1:
+                    await asyncio.sleep(settings.LLM_RETRY_BASE_DELAY * (2**attempt))
+        assert last is not None
+        raise last
+
+    async def _open_stream_with_retry(
+        self,
+        client: httpx.AsyncClient,
+        url: str,
+        *,
+        headers: dict | None = None,
+        json: dict | None = None,
+    ) -> httpx.Response:
+        """流式请求的打开阶段重试（连接/限流/5xx），返回已就绪的流式响应（调用方负责 aclose）。"""
+        last: Exception | None = None
+        for attempt in range(settings.LLM_RETRY_TIMES):
+            try:
+                req = client.build_request("POST", url, headers=headers, json=json)
+                resp = await client.send(req, stream=True)
+                if resp.status_code in _RETRY_STATUS:
+                    await resp.aclose()
+                    last = LLMError(f"HTTP {resp.status_code}")
+                    if attempt < settings.LLM_RETRY_TIMES - 1:
+                        await asyncio.sleep(settings.LLM_RETRY_BASE_DELAY * (2**attempt))
+                    continue
+                resp.raise_for_status()
+                return resp
+            except httpx.TransportError as e:
+                last = e
+                if attempt < settings.LLM_RETRY_TIMES - 1:
+                    await asyncio.sleep(settings.LLM_RETRY_BASE_DELAY * (2**attempt))
+        assert last is not None
+        raise last
+
+    async def _iter_sse(self, resp: httpx.Response) -> AsyncIterator[str]:
+        """解析 SSE 文本增量；无论成功与否都关闭响应。"""
+        try:
+            async for line in resp.aiter_lines():
+                if not line.startswith("data:"):
+                    continue
+                chunk = line[5:].strip()
+                if chunk == "[DONE]":
+                    break
+                try:
+                    delta = json.loads(chunk)["choices"][0]["delta"].get("content")
+                except (json.JSONDecodeError, KeyError, IndexError):
+                    continue
+                if delta:
+                    yield delta
+        finally:
+            await resp.aclose()
+
     # ---------------- 对话 / 工具调用 ----------------
 
     async def chat(
@@ -143,14 +222,12 @@ class LLMClient:
         if json_mode:
             payload["response_format"] = {"type": "json_object"}
         client = self._client_for_loop()
-        resp = await client.post(
+        resp = await self._post_with_retry(
+            client,
             f"{settings.DEEPSEEK_BASE_URL}/chat/completions",
             headers={"Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}"},
             json=payload,
         )
-        if resp.status_code >= 400:
-            logger.warning("DeepSeek 返回 %s: %s", resp.status_code, resp.text[:500])
-        resp.raise_for_status()
         _count_llm_call()
         data = resp.json()
         return _parse_message(data["choices"][0]["message"], "deepseek")
@@ -168,10 +245,9 @@ class LLMClient:
         if tools:
             payload["tools"] = _openai_tools(tools)
         client = self._client_for_loop()
-        resp = await client.post(
-            f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
+        resp = await self._post_with_retry(
+            client, f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
         )
-        resp.raise_for_status()
         _count_llm_call()
         data = resp.json()
         return _parse_message(data["choices"][0]["message"], "ollama")
@@ -194,47 +270,25 @@ class LLMClient:
         }
         try:
             client = self._client_for_loop()
-            async with client.stream(
-                "POST",
+            resp = await self._open_stream_with_retry(
+                client,
                 f"{settings.DEEPSEEK_BASE_URL}/chat/completions",
                 headers={"Authorization": f"Bearer {settings.DEEPSEEK_API_KEY}"},
                 json=payload,
-            ) as resp:
-                resp.raise_for_status()
-                async for line in resp.aiter_lines():
-                    if not line.startswith("data:"):
-                        continue
-                    chunk = line[5:].strip()
-                    if chunk == "[DONE]":
-                        break
-                    try:
-                        delta = json.loads(chunk)["choices"][0]["delta"].get("content")
-                    except (json.JSONDecodeError, KeyError, IndexError):
-                        continue
-                    if delta:
-                        yield delta
+            )
+            async for delta in self._iter_sse(resp):
+                yield delta
             return
         except Exception as e:  # noqa: BLE001
             logger.warning("DeepSeek 流式失败，切换 Ollama：%s", e)
         payload["model"] = settings.OLLAMA_CHAT_MODEL
         client = self._client_for_loop()
         _count_llm_call()
-        async with client.stream(
-            "POST", f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
-        ) as resp:
-            resp.raise_for_status()
-            async for line in resp.aiter_lines():
-                if not line.startswith("data:"):
-                    continue
-                chunk = line[5:].strip()
-                if chunk == "[DONE]":
-                    break
-                try:
-                    delta = json.loads(chunk)["choices"][0]["delta"].get("content")
-                except (json.JSONDecodeError, KeyError, IndexError):
-                    continue
-                if delta:
-                    yield delta
+        resp = await self._open_stream_with_retry(
+            client, f"{settings.OLLAMA_BASE_URL}/v1/chat/completions", json=payload
+        )
+        async for delta in self._iter_sse(resp):
+            yield delta
 
     # ---------------- Embedding（Ollama bge-m3，批量） ----------------
 
@@ -243,11 +297,11 @@ class LLMClient:
         if not texts:
             return []
         client = self._client_for_loop()
-        resp = await client.post(
+        resp = await self._post_with_retry(
+            client,
             f"{settings.OLLAMA_BASE_URL}/api/embed",
             json={"model": settings.EMBED_MODEL, "input": texts, "keep_alive": "10m"},
         )
-        resp.raise_for_status()
         return resp.json()["embeddings"]
 
     async def close(self) -> None:

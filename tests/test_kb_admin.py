@@ -1,8 +1,14 @@
-"""知识库管理权限门禁测试（X-Admin-Token + 审计留痕）。"""
+"""知识库管理权限门禁测试（X-Admin-Token + 审计留痕）。
+
+依赖运行中的后端服务（127.0.0.1:8000），整体标记 integration，CI 中跳过。
+"""
 import asyncio
 import json
 
 import httpx
+import pytest
+
+pytestmark = pytest.mark.integration
 
 
 def _post(path, data=None, token="", headers=None):

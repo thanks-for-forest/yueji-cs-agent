@@ -48,6 +48,9 @@ SUMMARY_THRESHOLD: int = int(os.getenv("SUMMARY_THRESHOLD", "20"))  # 超过该�
 MAX_SESSION_TURNS: int = int(os.getenv("MAX_SESSION_TURNS", "200"))
 TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.3"))
 MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "1024"))
+# LLM 调用容错：限流(429)/服务端5xx/传输错误 时指数退避重试（4xx 客户端错误不重试）
+LLM_RETRY_TIMES: int = int(os.getenv("LLM_RETRY_TIMES", "3"))
+LLM_RETRY_BASE_DELAY: float = float(os.getenv("LLM_RETRY_BASE_DELAY", "0.5"))
 
 # ---------- 可观测性（Langfuse） ----------
 LANGFUSE_PUBLIC_KEY: str = os.getenv("LANGFUSE_PUBLIC_KEY", "")
