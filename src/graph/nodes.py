@@ -10,7 +10,7 @@ import logging
 from config import settings
 from src.agents.router import route
 from src.emotion.detector import classify_rule
-from src.rag.retriever import retrieve_context
+from src.rag.retriever import catalog_context, is_catalog_query, retrieve_context
 from src.session.service import get_session_service
 from src.utils.security import contains_sensitive, detect_prompt_injection
 from src.utils.tracing import Tracer
@@ -124,13 +124,17 @@ def _enrich_query(msg: str, session: dict) -> str:
 async def _run_agent(state: dict, agent_name: str, trigger: str = "") -> dict:
     agent = _agents[agent_name]
     session, memory = state["session"], state.get("memory", [])
+    kw: dict = {"intent": state.get("intent"), "emotion": state.get("emotion")}
+    if trigger:
+        kw["trigger"] = trigger
     retrieved = None
     if state.get("intent") in NEED_RETRIEVAL_INTENTS and agent_name in ("product", "aftersale"):
         query = _enrich_query(state["user_message"], session)
         retrieved = await retrieve_context(query)
-    kw = {"intent": state.get("intent"), "emotion": state.get("emotion")}
-    if trigger:
-        kw["trigger"] = trigger
+        # 泛化导购兜底：检索为空时给出热门产品目录
+        if not retrieved and state.get("intent") in ("product_consult", "chitchat") and is_catalog_query(state["user_message"]):
+            retrieved = catalog_context(state["user_message"])
+            kw["catalog_mode"] = True
     async with Tracer.span(f"agent:{agent_name}"):
         result = await agent.run(state["user_message"], session, memory, retrieved=retrieved, **kw)
     return {"result": result.to_dict(), "session": session}

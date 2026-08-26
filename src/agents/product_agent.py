@@ -31,7 +31,7 @@ class ProductAgent(BaseAgent):
     system_prompt = SYSTEM_PROMPT_PRODUCT
     tool_names = ["search_product", "get_product"]
 
-    def _build_messages(self, user_message, memory_messages, retrieved):
+    def _build_messages(self, user_message, memory_messages, retrieved, kw_catalog_mode: bool = False):
         context = self.format_context(retrieved or [])
         messages: list[dict] = [
             {"role": "system", "content": self.system_prompt},
@@ -39,6 +39,8 @@ class ProductAgent(BaseAgent):
         messages.extend(memory_messages)
         if context:
             messages.append({"role": "system", "content": f"<知识片段>\n{context}\n</知识片段>"})
+        if kw_catalog_mode:
+            messages.append({"role": "system", "content": "【目录模式】用户想了解产品总览。请把<知识片段>中的产品逐个介绍（名称、价格、主打功效、适用肤质），可引导用户按功效/肤质细分。"})
         messages.append({"role": "user", "content": user_message})
         return messages
 
@@ -50,7 +52,7 @@ class ProductAgent(BaseAgent):
 
     async def run(self, user_message, session, memory_messages, retrieved=None, **kw):
         intent = kw.get("intent", "product_consult")
-        messages = self._build_messages(user_message, memory_messages, retrieved)
+        messages = self._build_messages(user_message, memory_messages, retrieved, kw_catalog_mode=kw.get("catalog_mode", False))
 
         out = await self._llm_loop(messages)
         reply = out["content"].strip()

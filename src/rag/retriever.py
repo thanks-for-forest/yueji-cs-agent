@@ -173,3 +173,40 @@ async def _llm_rerank(query: str, results: list[dict]) -> list[dict]:
     except Exception as e:  # noqa: BLE001
         logger.warning("LLM 重排失败，使用 RRF 结果：%s", e)
     return results
+
+
+# ---------------- 泛化导购目录兜底 ----------------
+CATALOG_KEYWORDS = ("有什么产品", "有哪些产品", "都有什么", "有哪些", "产品列表",
+                    "介绍一下", "介绍下", "都有些什么", "有啥", "还有什么产品", "有什么")
+
+
+def is_catalog_query(text: str) -> bool:
+    """泛化导购问题（目录型）：检索为空时走热门产品目录兜底。"""
+    return any(k in text for k in CATALOG_KEYWORDS)
+
+
+def catalog_context(query: str, top_k: int = 8) -> list[dict]:
+    """热门产品目录上下文（按销量 TopN；可识别品类关键词）。"""
+    from src.tools.product_tools import load_products
+
+    products = load_products()
+    # 品类识别（精华/面霜/水乳/洁面/洗面奶）
+    cat = None
+    for kw, c in (("洗面奶", "洁面"), ("洁面", "洁面"), ("精华", "精华"),
+                  ("水乳", "水乳"), ("面霜", "面霜"), ("晚霜", "面霜"), ("凝霜", "面霜")):
+        if kw in query:
+            cat = c
+            break
+    pool = [p for p in products if p["category"] == cat] if cat else products
+    picks = sorted(pool, key=lambda p: -p.get("monthly_sales", 0))[:top_k]
+    return [
+        {
+            "id": f"catalog-{p['product_id']}",
+            "text": (f"【{p['name']}】价格¥{p['price']}，品类{p['category']}，"
+                     f"功效{'、'.join(p['efficacy'][:3])}，适用肤质{'、'.join(p['skin_types'])}，"
+                     f"月销{p['monthly_sales']}件"),
+            "meta": {"type": "product", "source": p["product_id"], "name": p["name"]},
+            "dense_score": 0.99,
+        }
+        for p in picks
+    ]

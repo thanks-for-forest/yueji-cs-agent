@@ -277,9 +277,11 @@ async def stats() -> dict:
 
 async def query_test(query: str, top_k: int = 5) -> list[dict]:
     """检索命中测试：给定问题返回召回的检索块（含相似度/来源/是否 KB）。"""
-    from src.rag.retriever import retrieve_context
+    from src.rag.retriever import catalog_context, is_catalog_query, retrieve_context
 
     hits = await retrieve_context(query, top_k=top_k)
+    if not hits and is_catalog_query(query):
+        hits = catalog_context(query, top_k=top_k)
     return [
         {
             "id": h["id"],

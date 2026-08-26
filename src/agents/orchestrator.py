@@ -17,7 +17,7 @@ from src.agents.router import intent_to_agent, route
 from src.agents.skincare_agent import SkincareAgent
 from src.emotion.detector import classify_rule
 from src.graph.workflow import get_compiled_graph
-from src.rag.retriever import retrieve_context
+from src.rag.retriever import catalog_context, is_catalog_query, retrieve_context
 from src.session.service import get_session_service
 from src.tools.registry import get_registry
 from src.utils.security import contains_sensitive, detect_prompt_injection
@@ -127,6 +127,9 @@ class AgentOrchestrator:
             from src.graph.nodes import _enrich_query
 
             retrieved = await retrieve_context(_enrich_query(user_message, session))
+            if not retrieved and intent in ("product_consult", "chitchat") and is_catalog_query(user_message):
+                retrieved = catalog_context(user_message)
+                catalog_mode = True
 
         if need_transfer or intent == "transfer_human":
             result: AgentResult = await self.agents["human"].run(
