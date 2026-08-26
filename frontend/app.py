@@ -1,6 +1,10 @@
-"""「悦己 YUEJI 美妆」智能客服前端（Streamlit）—— 四视图架构。
+"""「悦己 YUEJI 美妆」智能客服前端 —— 多页面架构（每个角色独立 UI/URL）。
 
-视图：🏠 门户（游客AI客服）｜ 👤 登录/注册 → 用户专属AI客服 ｜ 🔐 管理员 → 知识库管理
+页面：
+  /portal  门户（游客 AI 客服，默认）
+  /login   登录 / 注册
+  /user    用户专属 AI 客服（需登录，守卫自动跳登录页）
+  /admin   管理员（口令登录 → 知识库管理）
 启动：streamlit run frontend/app.py（依赖后端 uvicorn :8000）
 """
 from __future__ import annotations
@@ -21,7 +25,16 @@ st.set_page_config(page_title="悦己美妆智能客服", page_icon="💄", layo
 EMOJI = {"normal": "🙂", "negative": "😟", "angry": "😡"}
 _SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+|KB-\d+)", _re.I)
 
+# ================= 会话状态初始化 =================
+if "user" not in st.session_state:
+    st.session_state.user = None
+if "admin_ok" not in st.session_state:
+    st.session_state.admin_ok = False
+if "admin_token" not in st.session_state:
+    st.session_state.admin_token = ""
 
+
+# ================= 公共工具 =================
 def render_sources(sources: list[dict]) -> None:
     """把〔来源〕渲染为可点击链接：点击在新窗口打开知识库原文。"""
     if not sources:
@@ -40,7 +53,6 @@ def render_sources(sources: list[dict]) -> None:
     st.markdown("📎 来源：" + " &nbsp;·&nbsp; ".join(links), unsafe_allow_html=True)
 
 
-# ---------------- 会话管理（按用户隔离） ----------------
 def _new_session(user_id: str, auth_token: str = "") -> None:
     try:
         headers = {"X-Auth-Token": auth_token} if auth_token else {}
@@ -59,8 +71,49 @@ def _chat_headers(auth_token: str = "") -> dict:
     return {"X-Auth-Token": auth_token} if auth_token else {}
 
 
-# ---------------- 客服对话视图（门户游客 / 登录用户共用） ----------------
+def _render_order_card(tool_call: dict) -> None:
+    """根据工具调用参数重新查询订单并渲染卡片。"""
+    args = tool_call.get("arguments", {})
+    oid = args.get("order_id", "")
+    tail = args.get("phone_tail", "")
+    if not oid:
+        return
+    try:
+        resp = httpx.get(f"{API}/api/order/{oid}", params={"phone_tail": tail}, timeout=10)
+        if resp.status_code != 200:
+            return
+        order = resp.json()
+        with st.container(border=True):
+            st.markdown(f"📦 **{order['order_id']}** · {order['status']}")
+            for it in order.get("items", []):
+                st.markdown(f"- {it['name']} ×{it['qty']}  ¥{it['price']}")
+            st.markdown(f"**合计：¥{order['total_amount']}**")
+            if order.get("latest_event"):
+                st.caption(f"🚚 最新物流：{order['latest_event']['desc']}（{order['latest_event']['time']}）")
+    except Exception:  # noqa: BLE001
+        pass
+
+
+def _render_recommendations(extra: dict) -> None:
+    recs = extra.get("recommendations", [])
+    if not recs:
+        return
+    st.markdown("#### ✨ 为你推荐")
+    cols = st.columns(len(recs))
+    for col, rec in zip(cols, recs):
+        with col:
+            with st.container(border=True):
+                st.markdown(f"**{rec['name']}**")
+                st.markdown(f"¥{rec['price']} · {rec.get('category', '')}")
+                st.caption(" / ".join(rec.get("efficacy", [])[:2]))
+                st.caption("✓ " + "；".join(rec.get("reasons", [])[:2]))
+    if extra.get("routine"):
+        st.markdown("**搭配建议**：")
+        st.markdown(" → ".join(f"{r['name']}（¥{r['price']}）" for r in extra["routine"]))
+
+
 def _render_chat(user_id: str, auth_token: str = "", title: str = "💬 小悦 · 悦己美妆客服") -> None:
+    """渲染一个完整客服对话视图（门户游客 / 登录用户共用）。"""
     sid_key = f"session_id_{user_id}"
     msg_key = f"messages_{user_id}"
     meta_key = f"meta_{user_id}"
@@ -151,51 +204,110 @@ def _render_chat(user_id: str, auth_token: str = "", title: str = "💬 小悦 �
             st.rerun()
 
 
-def _render_order_card(tool_call: dict) -> None:
-    """根据工具调用参数重新查询订单并渲染卡片。"""
-    args = tool_call.get("arguments", {})
-    oid = args.get("order_id", "")
-    tail = args.get("phone_tail", "")
-    if not oid:
+# ================= 页面 1：门户（游客 AI 客服） =================
+def page_portal() -> None:
+    st.sidebar.markdown("### 🌐 门户模式")
+    st.sidebar.caption("游客身份 · 会话不关联用户")
+    _render_chat("guest", "", title="💬 小悦 · 悦己美妆客服（游客）")
+    st.caption("💡 登录后（👤 登录/注册 页）可绑定专属账号与订单；管理员入口在「🔐 知识库管理」页。")
+
+
+# ================= 页面 2：登录 / 注册 =================
+def page_auth() -> None:
+    st.sidebar.markdown("### 👤 账户")
+    if st.session_state.user:
+        st.sidebar.caption(f"已登录：{st.session_state.user['username']}（{st.session_state.user['user_id']}）")
+        if st.sidebar.button("🚪 退出登录", use_container_width=True):
+            httpx.post(f"{API}/api/auth/logout",
+                       headers={"X-Auth-Token": st.session_state.user["token"]}, timeout=10)
+            st.session_state.user = None
+            st.rerun()
+
+    st.title("👤 用户登录 / 注册")
+    st.caption("登录后享受专属客服：会话与订单绑定您的账号")
+    tab1, tab2 = st.tabs(["登录", "注册"])
+
+    with tab1:
+        with st.form("login"):
+            u = st.text_input("用户名")
+            p = st.text_input("密码", type="password")
+            if st.form_submit_button("登录", use_container_width=True):
+                try:
+                    r = httpx.post(f"{API}/api/auth/login", json={"username": u, "password": p}, timeout=15)
+                    if r.status_code == 200:
+                        st.session_state.user = r.json()
+                        st.success("登录成功，正在进入专属客服…")
+                        st.switch_page(user_page)
+                    else:
+                        st.error(r.json().get("detail", "登录失败"))
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"网络错误：{e}")
+        st.info("演示账号：**demo1** / **demo2**（密码均为 demo123）—— demo1 可查本人订单 U001")
+
+    with tab2:
+        with st.form("register"):
+            u2 = st.text_input("新用户名")
+            p2 = st.text_input("新密码", type="password", help="至少6位")
+            if st.form_submit_button("注册", use_container_width=True):
+                try:
+                    r = httpx.post(f"{API}/api/auth/register", json={"username": u2, "password": p2}, timeout=15)
+                    if r.status_code == 200:
+                        st.success("注册成功，请到「登录」页登录")
+                    else:
+                        st.error(r.json().get("detail", "注册失败"))
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"网络错误：{e}")
+
+
+# ================= 页面 3：用户专属 AI 客服（守卫） =================
+def page_user() -> None:
+    user = st.session_state.user
+    if user is None:
+        st.title("🔒 需要登录")
+        st.warning("请先登录后再使用专属客服。")
+        if st.button("去登录 / 注册"):
+            st.switch_page(auth_page)
         return
-    try:
-        resp = httpx.get(f"{API}/api/order/{oid}", params={"phone_tail": tail}, timeout=10)
-        if resp.status_code != 200:
-            return
-        order = resp.json()
-        with st.container(border=True):
-            st.markdown(f"📦 **{order['order_id']}** · {order['status']}")
-            for it in order.get("items", []):
-                st.markdown(f"- {it['name']} ×{it['qty']}  ¥{it['price']}")
-            st.markdown(f"**合计：¥{order['total_amount']}**")
-            if order.get("latest_event"):
-                st.caption(f"🚚 最新物流：{order['latest_event']['desc']}（{order['latest_event']['time']}）")
-    except Exception:  # noqa: BLE001
-        pass
+    st.sidebar.markdown("### 👤 专属模式")
+    st.sidebar.caption(f"{user['username']}（{user['user_id']}）· 订单查询仅返回本人订单")
+    if st.sidebar.button("🚪 退出登录", use_container_width=True):
+        httpx.post(f"{API}/api/auth/logout", headers={"X-Auth-Token": user["token"]}, timeout=10)
+        st.session_state.user = None
+        st.rerun()
+    _render_chat(user["user_id"], user["token"], title=f"💬 小悦 · {user['username']} 专属客服")
 
 
-def _render_recommendations(extra: dict) -> None:
-    recs = extra.get("recommendations", [])
-    if not recs:
-        return
-    st.markdown("#### ✨ 为你推荐")
-    cols = st.columns(len(recs))
-    for col, rec in zip(cols, recs):
-        with col:
-            with st.container(border=True):
-                st.markdown(f"**{rec['name']}**")
-                st.markdown(f"¥{rec['price']} · {rec.get('category', '')}")
-                st.caption(" / ".join(rec.get("efficacy", [])[:2]))
-                st.caption("✓ " + "；".join(rec.get("reasons", [])[:2]))
-    if extra.get("routine"):
-        st.markdown("**搭配建议**：")
-        st.markdown(" → ".join(f"{r['name']}（¥{r['price']}）" for r in extra["routine"]))
-
-
-# ---------------- 知识库管理（管理员视图） ----------------
+# ================= 页面 4：管理员（口令登录 → 知识库管理） =================
 def _admin_headers() -> dict:
     return {"X-Admin-Token": st.session_state.get("admin_token", ""),
             "X-Admin-Name": st.session_state.get("admin_name", "admin") or "admin"}
+
+
+def page_admin() -> None:
+    st.sidebar.markdown("### 🔐 管理员")
+    if st.session_state.admin_ok:
+        if st.sidebar.button("🚪 退出管理员", use_container_width=True):
+            st.session_state.admin_ok = False
+            st.session_state.admin_token = ""
+            st.rerun()
+        _render_kb_page()
+    else:
+        st.title("🔐 管理员登录")
+        st.caption("仅限知识库管理员（口令见服务端配置 ADMIN_TOKEN）")
+        with st.form("admin_login"):
+            p = st.text_input("管理员口令", type="password")
+            if st.form_submit_button("登录", use_container_width=True):
+                try:
+                    r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": p}, timeout=10)
+                    if r.status_code == 200:
+                        st.session_state.admin_token = p
+                        st.session_state.admin_ok = True
+                        st.session_state.admin_name = "admin"
+                        st.rerun()
+                    else:
+                        st.error("口令错误")
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"网络错误：{e}")
 
 
 def _render_kb_page() -> None:
@@ -279,135 +391,11 @@ def _render_kb_page() -> None:
     st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
 
 
-# ---------------- 登录 / 注册视图 ----------------
-def _render_login() -> None:
-    st.title("👤 用户登录")
-    st.caption("登录后享受专属客服：会话与订单绑定您的账号")
-    tab1, tab2 = st.tabs(["登录", "注册"])
+# ================= 多页面路由（每个角色独立 UI/URL） =================
+portal_page = st.Page(page_portal, title="🏠 门户客服", url_path="portal", default=True)
+auth_page = st.Page(page_auth, title="👤 登录/注册", url_path="login")
+user_page = st.Page(page_user, title="👤 我的专属客服", url_path="user")
+admin_page = st.Page(page_admin, title="🔐 知识库管理", url_path="admin")
 
-    with tab1:
-        with st.form("login"):
-            u = st.text_input("用户名")
-            p = st.text_input("密码", type="password")
-            if st.form_submit_button("登录", use_container_width=True):
-                try:
-                    r = httpx.post(f"{API}/api/auth/login", json={"username": u, "password": p}, timeout=15)
-                    if r.status_code == 200:
-                        st.session_state.user = r.json()
-                        st.session_state.view = "user"
-                        st.rerun()
-                    else:
-                        st.error(r.json().get("detail", "登录失败"))
-                except Exception as e:  # noqa: BLE001
-                    st.error(f"网络错误：{e}")
-        st.info("演示账号：**demo1** / **demo2**（密码均为 demo123）—— demo1 可查本人订单 U001")
-
-    with tab2:
-        with st.form("register"):
-            u2 = st.text_input("新用户名")
-            p2 = st.text_input("新密码", type="password", help="至少6位")
-            if st.form_submit_button("注册", use_container_width=True):
-                try:
-                    r = httpx.post(f"{API}/api/auth/register", json={"username": u2, "password": p2}, timeout=15)
-                    if r.status_code == 200:
-                        st.success("注册成功，请到「登录」页登录")
-                    else:
-                        st.error(r.json().get("detail", "注册失败"))
-                except Exception as e:  # noqa: BLE001
-                    st.error(f"网络错误：{e}")
-
-
-# ---------------- 管理员登录视图 ----------------
-def _render_admin_login() -> None:
-    st.title("🔐 管理员登录")
-    st.caption("仅限知识库管理员（口令见服务端配置 ADMIN_TOKEN）")
-    with st.form("admin_login"):
-        p = st.text_input("管理员口令", type="password")
-        if st.form_submit_button("登录", use_container_width=True):
-            try:
-                r = httpx.post(f"{API}/api/kb/verify", headers={"X-Admin-Token": p}, timeout=10)
-                if r.status_code == 200:
-                    st.session_state.admin_token = p
-                    st.session_state.admin_ok = True
-                    st.session_state.admin_name = "admin"
-                    st.session_state.view = "admin"
-                    st.rerun()
-                else:
-                    st.error("口令错误")
-            except Exception as e:  # noqa: BLE001
-                st.error(f"网络错误：{e}")
-
-
-def _nav_current() -> str:
-    """根据当前 view 反推导航项（刷新后保持选中）。"""
-    if st.session_state.view == "portal":
-        return "🏠 门户客服"
-    if st.session_state.view == "login":
-        return "👤 登录 / 注册" if not st.session_state.user else f"👤 {st.session_state.user['username']} 专属客服"
-    if st.session_state.view == "user":
-        return f"👤 {st.session_state.user['username']} 专属客服" if st.session_state.user else "🏠 门户客服"
-    if st.session_state.view == "admin":
-        return "🔐 管理员"
-    return "🏠 门户客服"
-
-
-# ---------------- 顶部导航（四视图状态机） ----------------
-if "view" not in st.session_state:
-    st.session_state.view = "portal"
-if "user" not in st.session_state:
-    st.session_state.user = None
-if "admin_ok" not in st.session_state:
-    st.session_state.admin_ok = False
-if "admin_token" not in st.session_state:
-    st.session_state.admin_token = ""
-
-with st.sidebar:
-    st.title("💄 悦己 YUEJI")
-    st.caption("美妆电商智能客服 Agent")
-    nav_options = ["🏠 门户客服"]
-    if st.session_state.user:
-        nav_options.append(f"👤 {st.session_state.user['username']} 专属客服")
-    else:
-        nav_options.append("👤 登录 / 注册")
-    nav_options.append("🔐 管理员")
-    choice = st.radio("导航", nav_options, label_visibility="collapsed", index=nav_options.index(_nav_current()))
-    st.divider()
-
-    if st.session_state.user and choice.startswith("👤"):
-        if st.button("🚪 退出登录", use_container_width=True):
-            httpx.post(f"{API}/api/auth/logout",
-                       headers={"X-Auth-Token": st.session_state.user["token"]}, timeout=10)
-            st.session_state.user = None
-            st.session_state.view = "portal"
-            st.rerun()
-    if choice.startswith("🔐") and st.session_state.admin_ok:
-        if st.button("🚪 退出管理员", use_container_width=True):
-            st.session_state.admin_ok = False
-            st.session_state.admin_token = ""
-            st.session_state.view = "portal"
-            st.rerun()
-    st.caption("v3.1 · 门户/登录/专属客服/管理员")
-
-
-# ---------------- 视图分发 ----------------
-if choice.startswith("🏠"):
-    st.session_state.view = "portal"
-    _render_chat("guest", "", title="💬 小悦 · 悦己美妆客服（游客）")
-    st.caption("💡 登录后可绑定专属账号与订单；游客会话不关联用户。")
-
-elif choice.startswith("👤 登录"):
-    st.session_state.view = "login"
-    _render_login()
-
-elif choice.startswith("👤") and st.session_state.user:
-    st.session_state.view = "user"
-    u = st.session_state.user
-    _render_chat(u["user_id"], u["token"], title=f"💬 小悦 · {u['username']} 专属客服")
-    st.caption(f"👤 已登录：{u['username']}（{u['user_id']}）· 订单查询仅返回本人订单")
-
-elif choice.startswith("🔐"):
-    st.session_state.view = "admin"
-    if st.session_state.admin_ok:
-        _render_kb_page()
-    else:
-        _render_admin_login()
+nav = st.navigation([portal_page, auth_page, user_page, admin_page], position="sidebar")
+nav.run()
