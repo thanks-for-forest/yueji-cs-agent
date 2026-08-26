@@ -40,6 +40,7 @@
 | 🔄 退换货 | 售后资格判定（规则引擎）、表单式多轮、生成工单 | 规则引擎 + 状态机 + 工单系统 |
 | 💆 护肤推荐 | 肤质/肌肤问题/年龄标签匹配，**品类优先**，Top3 + 搭配建议 | LLM 标签提取 + 标签打分 |
 | 😡 情绪转人工 | 三级情绪检测，连续 2 轮负面 / 1 轮愤怒自动转接并带摘要工单 | 情感词典 + 规则 + 会话级平滑 |
+| 📚 知识库管理 | 上传 .md/.docx/.pdf → 分块预览 → **审核入库** → 回滚，客服即时学会新知识 | 自研 KB 服务（借鉴 Langchain-Chatchat 模式）+ Streamlit 管理页 |
 
 ## 🚀 快速开始
 
@@ -105,7 +106,8 @@ python -m scripts.stress_test --concurrency 50
 │   ├── rag/                # 混合检索（dense_first 融合）
 │   ├── tools/              # 订单/售后/产品工具 + 注册表
 │   ├── api/  memory/  emotion/  session/  llm/  utils/
-├── frontend/app.py         # Streamlit 界面
+├── frontend/app.py         # Streamlit 界面（对话页 + 知识库管理页）
+│   ├── src/kb/               # 知识库管理（解析/审核/回滚）
 ├── eval/                   # 测试集 + 评测脚本 + 报告
 ├── scripts/                # 数据生成/评测/追踪/压测/部署
 ├── tests/                  # 50 项 pytest 单测

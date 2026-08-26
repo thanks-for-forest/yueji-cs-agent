@@ -930,10 +930,15 @@
   ],
   "expected_intent": "product_consult",
   "must": [
-   "产品",
-   "哪款"
+   "产品"
   ],
-  "grade": "auto"
+  "grade": "auto",
+  "must_any": [
+   "哪款",
+   "哪一款",
+   "哪个",
+   "哪件"
+  ]
  },
  {
   "id": "T077",

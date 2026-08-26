@@ -64,7 +64,18 @@ if "user_id" not in st.session_state:
 if "session_id" not in st.session_state or "messages" not in st.session_state:
     new_session()
 
-# ---------------- 侧边栏 ----------------
+# ---------------- 页面导航（侧边栏） ----------------
+with st.sidebar:
+    st.title("💄 悦己 YUEJI")
+    st.caption("美妆电商智能客服 Agent")
+    page = st.radio("页面", ["💬 客服对话", "📚 知识库管理"], label_visibility="collapsed")
+    st.divider()
+
+if page == "📚 知识库管理":
+    _render_kb_page()
+    st.stop()
+
+# ---------------- 侧边栏（对话页） ----------------
 with st.sidebar:
     st.title("💄 悦己 YUEJI")
     st.caption("美妆电商智能客服 Agent")
@@ -89,6 +100,87 @@ with st.sidebar:
 # ---------------- 主区域 ----------------
 st.title("💬 小悦 · 悦己美妆客服")
 st.caption("商品咨询 · 订单查询 · 退换货 · 护肤推荐 · 情绪转人工")
+
+
+def _render_kb_page() -> None:
+    """知识库管理页：上传文档 → 预览分块 → 审核入库 → 回滚。"""
+    st.title("📚 知识库管理")
+    st.caption("上传 .md / .docx / .pdf 文档，审核后自动并入检索知识库（支持回滚）")
+
+    # ---- 上传区 ----
+    with st.container(border=True):
+        st.markdown("**上传新文档**")
+        c1, c2 = st.columns([3, 1])
+        with c1:
+            up = st.file_uploader("选择文件", type=["md", "txt", "docx", "pdf"], label_visibility="collapsed")
+        with c2:
+            cat = st.text_input("分类", value="", placeholder="如 活动/新品/公告")
+        if up is not None and st.button("⬆️ 上传并解析", use_container_width=True):
+            try:
+                r = httpx.post(
+                    f"{API}/api/kb/upload",
+                    files={"file": (up.name, up.getvalue(), up.type)},
+                    data={"category": cat},
+                    timeout=120,
+                )
+                r.raise_for_status()
+                d = r.json()
+                st.success(f"✅ 已上传「{d['filename']}」，解析出 {d['chunk_count']} 个分块，状态：待审核")
+                st.rerun()
+            except Exception as e:  # noqa: BLE001
+                st.error(f"上传失败：{e}")
+
+    st.divider()
+    try:
+        docs = httpx.get(f"{API}/api/kb/docs", timeout=10).json().get("docs", [])
+    except Exception:  # noqa: BLE001
+        st.error("无法连接后端服务")
+        return
+
+    pending = [d for d in docs if d["status"] == "pending"]
+    active = [d for d in docs if d["status"] == "active"]
+    other = [d for d in docs if d["status"] not in ("pending", "active")]
+
+    st.markdown(f"**待审核（{len(pending)}）**")
+    if not pending:
+        st.caption("暂无待审核文档")
+    for d in pending:
+        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"):
+            try:
+                chunks = httpx.get(f"{API}/api/kb/docs/{d['doc_id']}/chunks", timeout=10).json().get("chunks", [])
+                for c in chunks[:5]:
+                    st.code(c["text"][:300], language=None)
+                if len(chunks) > 5:
+                    st.caption(f"… 共 {len(chunks)} 块，其余省略")
+            except Exception:  # noqa: BLE001
+                st.caption("预览加载失败")
+            c1, c2 = st.columns(2)
+            if c1.button("✅ 审核通过", key=f"ap-{d['doc_id']}"):
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/approve", timeout=120)
+                st.success("已入库，检索将即时命中")
+                st.rerun()
+            if c2.button("❌ 拒绝", key=f"rj-{d['doc_id']}"):
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/reject", timeout=10)
+                st.rerun()
+
+    st.markdown(f"**已入库（{len(active)}）**")
+    if not active:
+        st.caption("暂无已入库文档")
+    for d in active:
+        with st.expander(f"📄 {d['filename']} · {d['chunk_count']} 块 · {d['created_at'][:16]}"):
+            st.caption(f"分类：{d['category'] or '-'}")
+            if st.button("↩️ 回滚（从知识库移除）", key=f"rb-{d['doc_id']}"):
+                httpx.post(f"{API}/api/kb/docs/{d['doc_id']}/rollback", timeout=120)
+                st.success("已回滚")
+                st.rerun()
+
+    if other:
+        st.markdown(f"**历史（{len(other)}）**")
+        for d in other:
+            st.caption(f"📄 {d['filename']} · {d['status']} · {d['created_at'][:16]}")
+    st.divider()
+    st.caption("💡 上传的文档经审核后并入知识库：客服在回答相关问题时将引用该文档内容（来源可点击）。")
+
 
 def _render_order_card(tool_call: dict) -> None:
     """根据工具调用参数重新查询订单并渲染卡片。"""

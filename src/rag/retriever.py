@@ -41,6 +41,12 @@ def _tokenize(text: str) -> list[str]:
     return tokens
 
 
+def invalidate() -> None:
+    """失效内存缓存（KB 索引重建后调用，强制下次重载）。"""
+    global _chunks, _bm25, _tokenized
+    _chunks, _bm25, _tokenized = [], None, []
+
+
 def load_chunks() -> list[dict]:
     """从数据目录加载全部检索块（内存缓存）。"""
     global _chunks, _bm25, _tokenized

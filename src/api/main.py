@@ -5,7 +5,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -132,6 +132,65 @@ async def chat_stream(req: ChatReq):
     return StreamingResponse(gen(), media_type="text/event-stream")
 
 
+# ---------------- 知识库管理（KB 上传/审核/回滚） ----------------
+from src.kb import service as kb_service
+
+
+@app.post("/api/kb/upload")
+async def kb_upload(file: UploadFile, category: str = ""):
+    """上传知识库文档（.md/.docx/.pdf），解析后进入待审核。"""
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="文件为空")
+    try:
+        doc = await kb_service.upload_document(file.filename or "unnamed.md", data, category)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return doc
+
+
+@app.get("/api/kb/docs")
+async def kb_docs():
+    return {"docs": await kb_service.list_docs()}
+
+
+@app.get("/api/kb/docs/{doc_id}/chunks")
+async def kb_doc_chunks(doc_id: str):
+    doc = await kb_service.get_doc(doc_id)
+    if doc is None:
+        raise HTTPException(status_code=404, detail="文档不存在")
+    return {"doc_id": doc_id, "chunks": [{"index": i, "text": c["text"]} for i, c in enumerate(doc["chunks"])]}
+
+
+@app.post("/api/kb/docs/{doc_id}/approve")
+async def kb_approve(doc_id: str):
+    try:
+        return await kb_service.approve_doc(doc_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/kb/docs/{doc_id}/reject")
+async def kb_reject(doc_id: str):
+    return await kb_service.reject_doc(doc_id)
+
+
+@app.post("/api/kb/docs/{doc_id}/rollback")
+async def kb_rollback(doc_id: str):
+    try:
+        return await kb_service.rollback_doc(doc_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.delete("/api/kb/docs/{doc_id}")
+async def kb_delete(doc_id: str):
+    try:
+        return await kb_service.delete_doc(doc_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # ---------------- 调试/工具 ----------------
 @app.get("/health")
 async def health():
@@ -143,7 +202,7 @@ import json as _json2
 import re as _re
 from urllib.parse import quote as _url_quote
 
-_SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+)", _re.I)
+_SRC_ID_RE = _re.compile(r"(P\d{3}|F\d{3}|POL-\d+|KB-\d+)", _re.I)
 _chunks_cache: list[dict] | None = None
 
 
@@ -220,7 +279,7 @@ async def source_detail(label: str):
         raise HTTPException(status_code=404, detail=f"未找到来源: {label}")
     first = hits[0]["meta"]
     title = first.get("name", first.get("source", label))
-    type_cn = {"product": "产品", "faq": "FAQ", "policy": "政策"}.get(first.get("type", ""), first.get("type", ""))
+    type_cn = {"product": "产品", "faq": "FAQ", "policy": "政策", "kb": "知识库文档"}.get(first.get("type", ""), first.get("type", ""))
     badges = "".join(
         f'<span class="badge">{b}</span>'
         for b in [type_cn, first.get("source", ""), first.get("category", "")] if b
