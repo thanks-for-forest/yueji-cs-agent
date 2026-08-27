@@ -94,7 +94,9 @@ python -m scripts.cleanup --dry-run         # 运维清理（检索日志/过期
 
 ## 📊 技术栈
 
-**Python 3.14** · **LangGraph**（StateGraph）· FastAPI · Streamlit · DeepSeek API · Ollama(bge-m3) · rank-bm25 · SQLite · **自研 JSONL 追踪器**（Langfuse 可选上报）· pytest · Docker
+**Python 3.12/3.14** · **LangGraph**（StateGraph Supervisor-Worker）· FastAPI · Streamlit · DeepSeek API · Ollama(bge-m3) · rank-bm25 · numpy 向量库 · SQLite(WAL) · **自研 JSONL 追踪器**（Langfuse 可选上报）· GitHub Actions CI · pytest · Docker
+
+> 📈 **完整技术栈流程图**（分层架构 / 对话时序 / 知识库数据流 / 工程化流水线）见 [`docs/技术栈流程图.md`](docs/技术栈流程图.md)（Mermaid，GitHub 直接渲染）。
 
 ## 🛡️ 安全设计
 
